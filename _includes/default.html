@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-site" />
+  <meta name="referrer" content="same-origin" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  {% for font in config.fonts %}
+    <link
+      rel="preload"
+      href="{{config.root_url}}{{font}}"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  {% endfor %}
+
+  <link
+    rel="shortcut icon"
+    href="{{config.root_url}}/assets/favicon.jpg"
+    type="image/jpg"
+  />
+
+  <link rel="stylesheet" type="text/css" href="{{config.root_url}}/assets/app.css">
+
+  <title>La France sous l'Occupation 1940-1945</title>
+</head>
+<body>
+  {{content}}
+
+  <script src="{{config.root_url}}/assets/app.js"></script>
+</body>
+</html>

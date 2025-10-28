@@ -1,0 +1,22 @@
+<example>
+  <h1>A example component</h1>
+
+  Found these records:
+
+  <ul>
+    <li each={r in state['records']}>{r}</li>
+  </ul>
+
+  <script>
+    import search from '../lib/search.instance'
+
+    export default class {
+      onBeforeMount(props, state) {
+        search.myAction().then(data => {
+
+          this.update({records: data['results']})
+        })
+      }
+    }
+  </script>
+</example>

@@ -1,0 +1,39 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@babel/core": "^7.17.8",
+    "@babel/preset-env": "^7.16.11",
+    "@popperjs/core": "^2.10.2",
+    "@riotjs/cli": "^10.0.0",
+    "@riotjs/compiler": "^10.0.1",
+    "@rollup/plugin-babel": "^6.0.3",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.1",
+    "@wendig/lib": "file:../../js-lib/src",
+    "bootstrap": "^5.3.3",
+    "concurrently": "^9.1.0",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "feather-icons": "^4.29.0",
+    "leaflet": "^1.9.3",
+    "pmtiles": "^4.0.1",
+    "riot": "^10.1.0",
+    "rollup": "^4.24.4",
+    "rollup-plugin-dotenv": "^0.5.1",
+    "rollup-plugin-riot": "^10.0.0",
+    "sass": "^1.93.2"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm:dev-js\" \"npm:dev-css\" \"npm:dev-11ty\"",
+    "build": "npm run build-11ty && npm run build-js && npm run build-css",
+    "dev-11ty": "npx @11ty/eleventy --serve --port=3000",
+    "dev-js": "rollup -c -w --no-watch.clearScreen",
+    "dev-css": "sass -c -w --update --source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
+    "dev-tile-server": "http-server ./data/tiles --cors",
+    "build-11ty": "cross-env APP_ENV=production npx @11ty/eleventy",
+    "build-js": "cross-env APP_ENV=production rollup -c --environment APP_ENV:production",
+    "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css"
+  }
+}
