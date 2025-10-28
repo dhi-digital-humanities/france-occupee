@@ -7,6 +7,10 @@
     <li each={r in state['records']}>{r}</li>
   </ul>
 
+  <div>
+    This is a translated string (see translations.json): {t('site_title')}
+  </div>
+
   <script>
     import search from '../lib/search.instance'
 
