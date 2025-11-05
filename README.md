@@ -8,7 +8,7 @@ The data is included within the `/data` directory and the map component addition
 
 ## Development
 
-The build process requires a working [NodeJS](https://nodejs.org). To get started, run
+The build process requires a working [NodeJS](https://nodejs.org) environment. To get started, run
 
     git clone https://github.com/dhi-digital-humanities/france-occupee.git
     cd france-occupee

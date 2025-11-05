@@ -1,0 +1,37 @@
+<world-map>
+  <div class="map"></div>
+
+  <script>
+    import * as L from 'leaflet'
+    import * as protomapsL from 'protomaps-leaflet'
+
+    export default class {
+      onMounted(props, state) {
+        state['map'] = this.buildMap()
+      }
+
+      buildMap() {
+        const element = this.root.querySelector('.map')
+        const map = L.map(element).
+          setView([51.505, -0.09], 6).
+          setMaxZoom(6);
+        // const url = 'https://build.protomaps.com/20251103.pmtiles'
+        // const url = '/assets/overview.pmgtiles'
+        const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
+
+        const layer = protomapsL.leafletLayer({
+          flavor: "light",
+          lang: "en",
+          url
+        })
+        layer.addTo(map)
+
+        // map.on('zoomend', event => {
+        //   console.log(event, map.getZoom())
+        // })
+
+        return map
+      }
+    }
+  </script>
+</world-map>
