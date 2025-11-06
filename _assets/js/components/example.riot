@@ -4,7 +4,11 @@
   Found these records:
 
   <ul>
-    <li each={r in state['records']}>{r}</li>
+    <li each={r in state['records']}>
+      {r['current_city']},
+      {r['current_house_number']}
+      {r['current_street']}
+    </li>
   </ul>
 
   <div>

@@ -5,14 +5,32 @@ import config from './lib/dotenv'
 
 // init
 
-let storage = null
+let storage = {}
 let database = new Database()
 onmessage = database.handler
 
 let promises = []
 promises.push(
-  fetch(`${config.root_url}/data/data.json`).then(r => r.json()).then(data => {
-    storage = data
+  fetch(`${config.root_url}/data/place.json`).then(r => r.json()).then(data => {
+    storage['places'] = data
+  })
+)
+
+promises.push(
+  fetch(`${config.root_url}/data/service.json`).then(r => r.json()).then(data => {
+    storage['services'] = data
+  })
+)
+
+promises.push(
+  fetch(`${config.root_url}/data/source.json`).then(r => r.json()).then(data => {
+    storage['sources'] = data
+  })
+)
+
+promises.push(
+  fetch(`${config.root_url}/data/service_bridge.json`).then(r => r.json()).then(data => {
+    storage['service_bridge'] = data
   })
 )
 
@@ -27,7 +45,7 @@ Promise.all(promises).then(data => {
 database.action('my-action', data => {
   const criteria = sanitizeCriteria(data.criteria)
 
-  const results = storage['records'].filter(record => {
+  const results = storage['places'].filter(record => {
     // ... return false if record doesn't match criteria ...
 
     return true

@@ -34,6 +34,9 @@
     "dev-tile-server": "http-server ./data/tiles --cors",
     "build-11ty": "cross-env APP_ENV=production npx @11ty/eleventy",
     "build-js": "cross-env APP_ENV=production rollup -c --environment APP_ENV:production",
-    "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css"
+    "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
+
+    "deploy": "bin/fo.sh deploy",
+    "import": "bin/fo.sh import"
   }
 }

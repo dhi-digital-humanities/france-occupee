@@ -13,6 +13,7 @@ The build process requires a working [NodeJS](https://nodejs.org) environment. T
     git clone https://github.com/dhi-digital-humanities/france-occupee.git
     cd france-occupee
     npm install
+    DATA_SHARE="..." npm run import
     npm run dev
 
 in the project directory and then navigate to http://localhost:3000 with your browser.
