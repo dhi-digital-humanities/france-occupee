@@ -5,51 +5,102 @@ import config from './lib/dotenv'
 
 // init
 
-let storage = {}
+let storage = {
+  places: {},
+  services: {},
+  sources: {}
+}
 let database = new Database()
 onmessage = database.handler
 
 let promises = []
 promises.push(
-  fetch(`${config.root_url}/data/place.json`).then(r => r.json()).then(data => {
-    storage['places'] = data
-  })
+  fetch(`${config.root_url}/data/place.json`).then(r => r.json())
 )
 
 promises.push(
-  fetch(`${config.root_url}/data/service.json`).then(r => r.json()).then(data => {
-    storage['services'] = data
-  })
+  fetch(`${config.root_url}/data/service.json`).then(r => r.json())
 )
 
 promises.push(
-  fetch(`${config.root_url}/data/source.json`).then(r => r.json()).then(data => {
-    storage['sources'] = data
-  })
+  fetch(`${config.root_url}/data/source.json`).then(r => r.json())
 )
 
-promises.push(
-  fetch(`${config.root_url}/data/service_bridge.json`).then(r => r.json()).then(data => {
-    storage['service_bridge'] = data
-  })
-)
+// promises.push(
+//   fetch(`${config.root_url}/data/service_bridge.json`).then(r => r.json())
+// )
 
 Promise.all(promises).then(data => {
-  console.log('ALL loaded')
+  const [places, services, sources] = data
+
+  storage['places'] = util.indexBy(places, 'id')
+  storage['services'] = util.indexBy(services, 'id')
+  storage['sources'] = util.indexBy(sources, 'id')
+
+  storage['roots'] = {}
+
+  for (const [id, service] of Object.entries(storage['services'])) {
+    // add source
+    const source_id = service['source_id']
+    service['source'] = storage['sources'][source_id]
+
+    // add place
+    const place_id = service['place_id']
+    service['place'] = storage['places'][place_id]
+
+    // build hierarchy
+    const parent_id = service['parent_service_id']
+    if (!parent_id) {
+      storage['roots'][id] = service
+      continue
+    }
+
+    delete service['parent_service_id']
+    service['parent_id'] = parent_id
+
+    const parent = storage['services'][parent_id]
+    parent['child_ids'] = parent['child_ids'] || []
+    parent['child_ids'].push(service['id'])
+  }
+
   database.loaded()
 })
 
 
 // actions
 
-database.action('my-action', data => {
+database.action('services', data => {
   const criteria = sanitizeCriteria(data.criteria)
 
-  const results = storage['places'].filter(record => {
-    // ... return false if record doesn't match criteria ...
+  const results = Object.values(storage['services']).filter(record => {
+    if (record['name'] === true) return false
 
     return true
   })
+
+  const sorted = util.sortBy(results, r => {
+    const dirty = (typeof r['name'] === 'string' ? r['name'] : '')
+    const clean = dirty.replaceAll(/[\(\)]+/g)
+
+    return clean
+  })
+
+  return paginate(sorted, criteria)
+})
+
+
+database.action('services-map', data => {
+  const criteria = sanitizeCriteria(data.criteria)
+
+  const results = Object.values(storage['services']).filter(record => {
+    if (record['name'] === true) return false
+    if (!record['place']) return false
+    if (!record['place']['latitude']) return false
+
+    return true
+  }).slice(0, 1000)
+
+  criteria['per_page'] = results.length
 
   return paginate(results, criteria)
 })
@@ -65,17 +116,19 @@ const sanitizeCriteria = (input) => {
   return criteria
 }
 
-const paginate = (records, criteria, highlight) => {
-  const {page, per_page} = criteria
+const paginate = (records, criteria) => {
   const total = records.length
-  const start = (criteria.page - 1) * criteria.per_page
-  const results = records.slice(start, start + criteria.per_page)
+  const page = criteria.page
+  let per_page = criteria.per_page
+  if (per_page === 'max') per_page = total
+
+  const start = (page - 1) * per_page
+  const results = records.slice(start, start + per_page)
 
   return {
     page,
     per_page,
     total,
-    results,
-    highlight
+    results
   }
 }

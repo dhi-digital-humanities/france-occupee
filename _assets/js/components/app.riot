@@ -1,0 +1,53 @@
+<app>
+  <div class="container-fluid p-4">
+    <div class="row">
+      <div class="col-3">
+        <div is="main-search" />
+      </div>
+      <div class="col-9">
+        <h1>{t('site_title')} - {t('site_subtitle')}</h1>
+        
+        <div
+          is="results"
+          data={state['data']}
+          map-data={state['mapData']}
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import {UrlSearch} from '@wendig/lib'
+    import search from '../lib/search.instance'
+
+    export default class {
+      constructor() {
+        this.onSearch = this.onSearch.bind(this)
+        this.urlSearch = new UrlSearch(this, {
+          // getParams: params,
+        })
+      }
+
+      onSearch(p) {
+        // console.log(p)
+
+        let promises = []
+        promises.push(search.services(p))
+        promises.push(search.servicesMap(p))
+
+        Promise.all(promises).then(datas => {
+          const [data, mapData] = datas
+          
+          this.update({data, mapData})
+          this.bus.emit('new-results')
+        })
+      }
+
+      onBeforeMount(props, state) {
+        this.urlSearch.setup()
+
+        window.t = this
+      }
+    }
+  </script>
+</app>

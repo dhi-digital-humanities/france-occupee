@@ -1,14 +1,25 @@
 body {
-    background-color: rgb(255, 253, 234);
+  background-color: rgb(255, 253, 234);
 }
 
 [is='world-map'] {
-    display: block;
-    width: 800px;
-    height: 600px;
+  display: block;
+  width: 100%;
+  height: calc(100vh - 190px);
 
-    .map {
-        width: 100%;
-        height: 100%;
-    }
+  .map {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+[is='icon'] {
+  width: 1em;
+  height: 1em;
+}
+
+table {
+  th.text-column {
+    width: 300px;
+  }
 }

@@ -1,0 +1,63 @@
+<results>
+  <ul class="nav nav-tabs justify-content-end">
+    <li class="nav-item">
+      <a
+        class="nav-link"
+        data-bs-toggle="tab"
+        data-bs-target="#map-pane"
+        href="#"
+      >{cap(t('map_view'))}</a>
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link active"
+        data-bs-toggle="tab"
+        data-bs-target="#list-pane"
+        href="#"
+      >{cap(t('list_view'))}</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade" id="map-pane">
+      <div
+        is="world-map"
+        map-data={props['mapData']}
+      />
+    </div>
+    <div class="tab-pane fade show active" id="list-pane">
+      <div is="sub-form" />
+
+      <table if={props['data']} class="table">
+        <thead>
+          <tr>
+            <th scope="col">{cap(t('city'))}</th>
+            <th scope="col">{cap(t('date'))}</th>
+            <th scope="col">{cap(t('name'))}</th>
+            <th scope="col">{cap(t('address'))}</th>
+            <th scope="col" class="text-column">{cap(t('organization'))}</th>
+            <th scope="col" class="text-end">{cap(t('action'))}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr each={service in props['data']['results']}>
+            <td>{service.city()}</td>
+            <td>{service.date()}</td>
+            <td>{service.name()}</td>
+            <td>{service.address()}</td>
+            <td>{service.hierarchy()}</td>
+            <td class="text-end"><svg is="icon" bootstrap-id="plus"></svg></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    export default class {
+      onUpdated(props) {
+        // console.log(props['data']['results'])
+      }
+    }
+  </script>
+</results>

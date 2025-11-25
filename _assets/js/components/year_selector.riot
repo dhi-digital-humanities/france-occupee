@@ -1,0 +1,25 @@
+<year-selector>
+  <div class="mb-2">{cap(t('year_prompt'))}</div>
+
+  <div class="btn-group btn-group-sm w-100">
+    <template each={year in years()}>
+      <input
+        type="checkbox"
+        class="btn-check"
+        id="btn-check-year-{year}"
+        value={year}
+        checked={true}
+      />
+      <label class="btn btn-primary" for="btn-check-year-{year}">{year}</label>
+    </template>
+  </div>
+  
+
+  <script>
+    export default class {
+      years() {
+        return [1940, 1941, 1942, 1943, 1944, 1945]
+      }    
+    }
+  </script>
+</year-selector>

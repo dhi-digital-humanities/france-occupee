@@ -13,6 +13,7 @@
     "@rollup/plugin-terser": "^0.4.1",
     "@wendig/lib": "git+https://git.wendig.io/git/js-lib.git",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.13.1",
     "concurrently": "^9.1.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
@@ -35,7 +36,6 @@
     "build-11ty": "cross-env APP_ENV=production npx @11ty/eleventy",
     "build-js": "cross-env APP_ENV=production rollup -c --environment APP_ENV:production",
     "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
-
     "deploy": "bin/fo.sh deploy",
     "import": "bin/fo.sh import"
   }

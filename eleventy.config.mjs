@@ -8,4 +8,5 @@ export default async function(ec) {
     ec.addPassthroughCopy('assets')
     ec.addPassthroughCopy('data')
     ec.addPassthroughCopy({"_data/translations.json": "data/translations.json"})
+    ec.addPassthroughCopy({"node_modules/bootstrap-icons/bootstrap-icons.svg": "assets/bootstrap-icons.svg"})
 }

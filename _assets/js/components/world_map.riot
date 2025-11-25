@@ -8,15 +8,22 @@
     export default class {
       onMounted(props, state) {
         state['map'] = this.buildMap()
+
+        const observer = new ResizeObserver((entries, observer) => {
+          state['map'].invalidateSize()
+        })
+        observer.observe(this.root)
       }
 
       buildMap() {
+        // Thuy, you can initialize the map but there is no data yet
+
         const element = this.root.querySelector('.map')
         const map = L.map(element).
           setView([51.505, -0.09], 6).
           setMaxZoom(6);
         // const url = 'https://build.protomaps.com/20251103.pmtiles'
-        // const url = '/assets/overview.pmgtiles'
+        // const url = '/assets/overview.pmtiles'
         const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
 
         const layer = protomapsL.leafletLayer({
@@ -26,11 +33,12 @@
         })
         layer.addTo(map)
 
-        // map.on('zoomend', event => {
-        //   console.log(event, map.getZoom())
-        // })
-
         return map
+      }
+
+      onUpdated(props) {
+        // Thuy: here, `props['mapData]` has the data
+        console.log(props['mapsData'])
       }
     }
   </script>

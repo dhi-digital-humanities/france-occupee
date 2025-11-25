@@ -1,0 +1,42 @@
+<main-search>
+  <form>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a
+          class="nav-link active"
+          data-bs-toggle="tab"
+          data-bs-target="#search-pane"
+          href="#"
+        >{cap(t('search'))}</a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          data-bs-toggle="tab"
+          data-bs-target="#favorites-pane"
+          href="#"
+        >{cap(t('favorites'))}</a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active pt-3" id="search-pane">
+        <div is="full-text-search"></div>
+        <div is="year-selector"></div>
+      </div>
+      <div class="tab-pane fade" id="favorites-pane">fav</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 mt-3">{cap(t('verbs.search'))}</button>
+  </form>
+
+  <script>
+    import {Tab} from 'bootstrap'
+
+    export default class {
+      onBeforeMount() {
+
+      }
+    }
+  </script>
+</main-search>
