@@ -11,7 +11,7 @@
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.1",
-    "@wendig/lib": "file:../../js-lib/src",
+    "@wendig/lib": "git+https://git.wendig.io/git/js-lib.git",
     "bootstrap": "^5.3.3",
     "concurrently": "^9.1.0",
     "cross-env": "^10.1.0",
