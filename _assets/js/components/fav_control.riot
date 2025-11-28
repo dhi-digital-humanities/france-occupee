@@ -1,0 +1,23 @@
+<fav-control>
+  <a onclick={event => toggle(event)} href="#">
+    <svg if={isActive()} is="icon" bootstrap-id="star-fill"></svg>
+    <svg if={!isActive()} is="icon" bootstrap-id="star"></svg>
+  </a>
+
+  <script>
+    import watchlist from '../lib/watchlist'
+
+    export default class {
+      isActive() {
+        return watchlist.has(this.props['serviceId'])
+      }
+
+      toggle() {
+        event.preventDefault()
+
+        watchlist.toggle(this.props['serviceId'])
+        this.update()
+      }
+    }
+  </script>
+</fav-control>

@@ -14,7 +14,9 @@
         "organization": "organisation",
         "action": "action",
         "map_view": "affichage carte",
-        "list_view": "affichage liste"
+        "list_view": "affichage liste",
+        "create_link": "créer un lien à partir de cette liste",
+        "export_csv": "exporter en CSV"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",

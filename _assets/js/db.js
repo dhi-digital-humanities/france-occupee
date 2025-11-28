@@ -13,25 +13,10 @@ let storage = {
 let database = new Database()
 onmessage = database.handler
 
-let promises = []
-promises.push(
-  fetch(`${config.root_url}/data/place.json`).then(r => r.json())
-)
-
-promises.push(
-  fetch(`${config.root_url}/data/service.json`).then(r => r.json())
-)
-
-promises.push(
-  fetch(`${config.root_url}/data/source.json`).then(r => r.json())
-)
-
-// promises.push(
-//   fetch(`${config.root_url}/data/service_bridge.json`).then(r => r.json())
-// )
-
-Promise.all(promises).then(data => {
-  const [places, services, sources] = data
+const setup = async () => {
+  const places = await fetch(`${config.root_url}/data/place.json`).then(r => r.json())
+  const services = await fetch(`${config.root_url}/data/service.json`).then(r => r.json())
+  const sources = await fetch(`${config.root_url}/data/source.json`).then(r => r.json())
 
   storage['places'] = util.indexBy(places, 'id')
   storage['services'] = util.indexBy(services, 'id')
@@ -64,16 +49,74 @@ Promise.all(promises).then(data => {
   }
 
   database.loaded()
-})
-
+}
+setup()
 
 // actions
+
+const matchesTerms = (target, actual) => {
+  if (!target) return true
+  if (!actual) return false
+
+  const r = new RegExp(util.fold(target), 'i')
+  const actuals = (Array.isArray(actual) ? actual : [actual])
+
+  for (const a of actuals) {
+    if (!a) continue
+    if (util.fold(a).match(r)) return true
+  }
+
+  return false
+}
+
+const matchesIds = (target, actual) => {
+  if (!target) return true
+
+  return target.indexOf(actual) != -1
+}
+
+const matchesYears = (years, record) => {
+  if (!years) return true
+  const actual = dig(record, ['source', 'd_edition_year'])
+  if (!actual) return false
+
+  return years.indexOf(actual) != -1
+}
+
+const dig = (obj, chain = []) => {
+  let result = obj
+
+  while (result && chain.length > 0) {
+    const key = chain.shift()
+    result = result[key]
+  }
+
+  return result
+}
 
 database.action('services', data => {
   const criteria = sanitizeCriteria(data.criteria)
 
   const results = Object.values(storage['services']).filter(record => {
-    if (record['name'] === true) return false
+    if (record['name'] === true) return false // TODO: fix data
+
+    if (criteria['fav']) {
+      if (!matchesIds(criteria['id'], record['id'])) return false
+    }
+
+    const name = record['name']
+    if (!matchesTerms(criteria['name'], name)) return false
+
+    const city = dig(record, ['place', 'current_city'])
+    if (!matchesTerms(criteria['city'], city)) return false
+
+    const address = dig(record, ['place', 'current_street'])
+    if (!matchesTerms(criteria['address'], address)) return false
+
+    if (!criteria['fav']) {
+      if (!matchesTerms(criteria['terms'], [name, city, address])) return false
+      if (!matchesYears(criteria['years'], record)) return false
+    }
 
     return true
   })
@@ -100,7 +143,7 @@ database.action('services-map', data => {
     return true
   }).slice(0, 1000)
 
-  criteria['per_page'] = results.length
+  criteria['perPage'] = results.length
 
   return paginate(results, criteria)
 })
@@ -111,7 +154,17 @@ database.action('services-map', data => {
 const sanitizeCriteria = (input) => {
   let criteria = input || {}
   criteria['page'] = criteria['page'] || 1
-  criteria['per_page'] = criteria['per_page'] || 24
+  criteria['perPage'] = criteria['perPage'] || 24
+  if (criteria['years']) {
+    criteria['years'] = criteria['years'].
+      split(/\s*,\s*/).
+      map(y => parseInt(y))
+  }
+  if (criteria['id']) {
+    criteria['id'] = criteria['id'].
+      split(/\s*,\s*/).
+      map(y => parseInt(y))
+  }
 
   return criteria
 }
@@ -119,15 +172,15 @@ const sanitizeCriteria = (input) => {
 const paginate = (records, criteria) => {
   const total = records.length
   const page = criteria.page
-  let per_page = criteria.per_page
-  if (per_page === 'max') per_page = total
+  let perPage = criteria.perPage
+  if (perPage === 'max') perPage = total
 
-  const start = (page - 1) * per_page
-  const results = records.slice(start, start + per_page)
+  const start = (page - 1) * perPage
+  const results = records.slice(start, start + perPage)
 
   return {
     page,
-    per_page,
+    perPage,
     total,
     results
   }

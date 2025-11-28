@@ -8,7 +8,8 @@
         class="btn-check"
         id="btn-check-year-{year}"
         value={year}
-        checked={true}
+        checked={isChecked(year)}
+        onchange={event => toggle(year, event)}
       />
       <label class="btn btn-primary" for="btn-check-year-{year}">{year}</label>
     </template>
@@ -17,9 +18,62 @@
 
   <script>
     export default class {
+      fromUrl() {
+        const c = this.props['criteria']
+        if (!c) return this.years()
+        if (!c['years']) return this.years()
+
+        const result = c['years'].split(/\s*,\s*/).map(y => parseInt(y))
+
+        return (
+          result.length > 0 ?
+          result : 
+          this.years()
+        )
+      }
+
+      onUpdated() {
+        const inputs = this.root.querySelectorAll('input')
+        for (const input of inputs) {
+          input.checked = (input.getAttribute('checked') === 'checked')
+        }
+      }
+
+      isChecked(year) {
+        return this.fromUrl().indexOf(year) != -1
+      }
+
+      toggle(year, event) {
+        event.preventDefault()
+        event.stopPropagation()
+        event.stopImmediatePropagation()
+
+        let years = this.fromUrl()
+
+        const index = years.indexOf(year)
+        if (index == -1) {
+          years.push(year)
+          years = years.sort()
+        } else {
+          years.splice(index, 1)
+        }
+
+        if (years.length === this.years().length) {
+          years = null
+        } else {
+          years = years.map(y => `${y}`).join(',')
+        }
+
+        this.props.onInput({years})
+      }
+
       years() {
         return [1940, 1941, 1942, 1943, 1944, 1945]
-      }    
+      }
+
+      value() {
+
+      }
     }
   </script>
 </year-selector>

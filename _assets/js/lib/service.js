@@ -3,6 +3,10 @@ export default class Service {
     this.d = data
   }
 
+  id() {
+    return this.d['id']
+  }
+
   city() {
     return this.d['place']['current_city']
   }

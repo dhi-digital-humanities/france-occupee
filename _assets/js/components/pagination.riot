@@ -1,3 +1,99 @@
-<pagination>
-  PAGINATION
+<pagination class="d-flex justify-content-center">
+  <template if={enabled()}>
+    <a
+      onclick={event => pageTo(1, event)}
+      href="#"
+      class="first text-decoration-none dfk-sans-serif {show(!isFirst())}"
+    >
+      <svg is="icon" bootstrap-id="chevron-double-left"></svg>
+      <span class="text">{props.firstLabel || 'first page'}</span>
+    </a>
+    <a
+      onclick={event => pageTo(this.props.page - 1, event)}
+      href="#"
+      class="previous text-decoration-none dfk-sans-serif {show(!isFirst())}"
+    >
+      <svg is="icon" bootstrap-id="chevron-left"></svg>
+      <span class="text">{props.previousLabel || 'previous page'}</span>
+    </a>
+    <div class="indicator">{this.props.page}/{totalPages()}</div>
+    <a
+      onclick={event => pageTo(this.props.page + 1, event)}
+      href="#"
+      class="next text-decoration-none dfk-sans-serif {show(!isLast())}"
+    >
+      <span class="text">{props.nextLabel || 'next page'}</span>
+      <svg is="icon" bootstrap-id="chevron-right"></svg>
+    </a>
+    <a
+      onclick={event => pageTo(totalPages(), event)}
+      href="#"
+      class="last text-decoration-none dfk-sans-serif {show(!isLast())}"
+    >
+      <span class="text">{props.lastLabel || 'last page'}</span>
+      <svg is="icon" bootstrap-id="chevron-double-right"></svg>
+    </a>
+  </template>
+
+  <script>
+    import Icon from './icon.riot'
+
+    export default class {
+      static components = {
+        Icon
+      }
+
+      constructor() {
+        this.previous = this.previous.bind(this)
+        this.next = this.next.bind(this)
+      }
+
+      onBeforeMount() {
+        this.on('to-previous-page', this.previous)
+        this.on('to-next-page', this.next)
+      }
+
+      previous() {
+        if (this.props.page > 1) {
+          this.pageTo(this.props.page - 1)
+        }
+      }
+
+      next() {
+        if (this.props.page < this.totalPages()) {
+          this.pageTo(this.props.page + 1)
+        }
+      }
+
+      enabled() {
+        const total = this.props.total || 0
+        return total > this.props.perPage
+      }
+
+      pageTo(newPage, event) {
+        if (event) {
+          event.preventDefault()
+        }
+
+        const h = this.props.pageTo
+        if (h) h({page: newPage})
+      }
+
+      isFirst() {
+        return this.props.page == 1
+      }
+
+      isLast() {
+        return this.props.page == this.totalPages()
+      }
+
+      totalPages() {
+        return Math.ceil(this.props.total / this.props.perPage)
+      }
+
+      show(value) {
+        return value ? '' : 'd-none'
+      }
+    }
+  </script>
 </pagination>

@@ -23,3 +23,15 @@ table {
     width: 300px;
   }
 }
+
+[is='pagination'] {
+  // position: fixed;
+  // bottom: 0;
+  // right: 0;
+  // left: 0;
+
+  & > * {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}

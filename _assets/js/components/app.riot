@@ -2,7 +2,11 @@
   <div class="container-fluid p-4">
     <div class="row">
       <div class="col-3">
-        <div is="main-search" />
+        <div
+          is="main-search"
+          on-input={onInput}
+          criteria={state['criteria']}
+        ></div>
       </div>
       <div class="col-9">
         <h1>{t('site_title')} - {t('site_subtitle')}</h1>
@@ -11,24 +15,40 @@
           is="results"
           data={state['data']}
           map-data={state['mapData']}
+          on-input={onInput}
+          criteria={state['criteria']}
         ></div>
       </div>
     </div>
   </div>
 
   <script>
-    import {UrlSearch} from '@wendig/lib'
+    import {UrlSearch, Url} from '@wendig/lib'
     import search from '../lib/search.instance'
+    import watchlist from '../lib/watchlist'
 
     export default class {
       constructor() {
+        const params = () => {
+          const url = Url.current()
+          let p = url.hashParams()
+          p['page'] = parseInt(p['page'] || 1)
+          p['perPage'] = parseInt(p['perPage'] || 10)
+
+          return p
+        }
+
         this.onSearch = this.onSearch.bind(this)
         this.urlSearch = new UrlSearch(this, {
-          // getParams: params,
+          getParams: params
         })
       }
 
       onSearch(p) {
+        if (p['fav'] == 'true') {
+          const ids = watchlist.unpack()
+          p['id'] = ids.map(id => `${id}`).join(',')
+        }
         // console.log(p)
 
         let promises = []

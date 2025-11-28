@@ -23,33 +23,55 @@
       <div
         is="world-map"
         map-data={props['mapData']}
-      />
+      ></div>
     </div>
-    <div class="tab-pane fade show active" id="list-pane">
-      <div is="sub-form" />
+    <div class="tab-pane fade show active position-relative" id="list-pane">
+      <div
+        is="sub-form"
+        on-input={props['onInput']}
+        criteria={props['criteria']}
+      ></div>
 
-      <table if={props['data']} class="table">
-        <thead>
-          <tr>
-            <th scope="col">{cap(t('city'))}</th>
-            <th scope="col">{cap(t('date'))}</th>
-            <th scope="col">{cap(t('name'))}</th>
-            <th scope="col">{cap(t('address'))}</th>
-            <th scope="col" class="text-column">{cap(t('organization'))}</th>
-            <th scope="col" class="text-end">{cap(t('action'))}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr each={service in props['data']['results']}>
-            <td>{service.city()}</td>
-            <td>{service.date()}</td>
-            <td>{service.name()}</td>
-            <td>{service.address()}</td>
-            <td>{service.hierarchy()}</td>
-            <td class="text-end"><svg is="icon" bootstrap-id="plus"></svg></td>
-          </tr>
-        </tbody>
-      </table>
+      <template if={props['data']}>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">{cap(t('city'))}</th>
+              <th scope="col">{cap(t('date'))}</th>
+              <th scope="col">{cap(t('name'))}</th>
+              <th scope="col">{cap(t('address'))}</th>
+              <th scope="col" class="text-column">{cap(t('organization'))}</th>
+              <th scope="col" class="text-end">{cap(t('action'))}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr each={service in props['data']['results']}>
+              <td>{service.city()}</td>
+              <td>{service.date()}</td>
+              <td>{service.name()}</td>
+              <td>{service.address()}</td>
+              <td>{service.hierarchy()}</td>
+              <td class="text-end">
+                <div is="fav-control" service-id={service.id()}></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="container-fluid position-fixed bottom-0 start-0 end-0 bg-white">
+          <div class="row">
+            <div class="col-9 offset-3 p-4">
+              <div
+                is="pagination"
+                page={props['data']['page']}
+                per-page={props['data']['perPage']}
+                total={props['data']['total']}
+                page-to={props.onInput}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 
