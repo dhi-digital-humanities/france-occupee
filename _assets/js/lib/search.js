@@ -1,12 +1,12 @@
-import config from './dotenv'
+import config from '../../../_data/config'
 import Service from './service'
 
 import {Url, util, Search as WendigSearch} from '@wendig/lib'
 
 export default class Search extends WendigSearch {
   constructor() {
-    let url = config.ROOT_URL + '/assets/db.js';
-    if (!config.ROOT_URL) {
+    let url = config().root_url + '/assets/db.js';
+    if (!config().root_url) {
       const u = Url.current()
       u.setPath('/assets/db.js')
       url = u.url()

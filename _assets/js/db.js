@@ -1,6 +1,6 @@
 import {util} from '@wendig/lib'
 import {Database} from '@wendig/lib'
-import config from './lib/dotenv'
+import config from '../../_data/config'
 
 
 // init
@@ -14,9 +14,9 @@ let database = new Database()
 onmessage = database.handler
 
 const setup = async () => {
-  const places = await fetch(`${config.root_url}/data/place.json`).then(r => r.json())
-  const services = await fetch(`${config.root_url}/data/service.json`).then(r => r.json())
-  const sources = await fetch(`${config.root_url}/data/source.json`).then(r => r.json())
+  const places = await fetch(`${config().root_url}/data/place.json`).then(r => r.json())
+  const services = await fetch(`${config().root_url}/data/service.json`).then(r => r.json())
+  const sources = await fetch(`${config().root_url}/data/source.json`).then(r => r.json())
 
   storage['places'] = util.indexBy(places, 'id')
   storage['services'] = util.indexBy(services, 'id')

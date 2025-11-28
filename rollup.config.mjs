@@ -3,7 +3,16 @@ import riot from 'rollup-plugin-riot'
 import commonjs from '@rollup/plugin-commonjs'
 import terser from '@rollup/plugin-terser'
 
-import dotenv from "rollup-plugin-dotenv"
+import replace from '@rollup/plugin-replace'
+import dotenv from 'dotenv'
+dotenv.config()
+// import {default as rpd} from "rollup-plugin-dotenv"
+
+const envReplacements = {
+  preventAssignment: true,
+  'process.env.APP_ENV': JSON.stringify(process.env.APP_ENV),
+  'process.env.ROOT_URL': JSON.stringify(process.env.ROOT_URL)
+};
 
 const APP_ENV = process.env['APP_ENV'] || 'development'
 const optimize = (APP_ENV == 'production')
@@ -17,8 +26,8 @@ const app = {
   },
   plugins: [
     nodeResolve(),
-    dotenv(),
     commonjs(),
+    replace(envReplacements),
     riot(),
     ...(optimize ? [terser()] : [])
   ]
@@ -33,8 +42,8 @@ const database = {
   },
   plugins: [
     nodeResolve(),
-    dotenv(),
     commonjs(),
+    replace(envReplacements),
     ...(optimize ? [terser()] : [])
   ]
 }

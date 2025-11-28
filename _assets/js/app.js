@@ -2,7 +2,7 @@ import * as riot from 'riot'
 
 import {i18n, RiotPlugins, BusRiotPlugin} from '@wendig/lib'
 
-import config from './lib/dotenv'
+import config from '../../_data/config'
 
 // import the component
 import App from './components/app.riot'
@@ -29,7 +29,7 @@ riot.register('world-map', WorldMap)
 riot.register('year-selector', YearSelector)
 
 // set up translations then mount all registered components
-i18n.fetch(`${config.root_url}/data/translations.json`).then((data) => {
+i18n.fetch(`${config().root_url}/data/translations.json`).then((data) => {
     console.log('translations loaded')
 
     RiotPlugins.setup(riot)

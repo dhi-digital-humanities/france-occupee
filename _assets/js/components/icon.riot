@@ -2,5 +2,15 @@
   xmlns="http://www.w3.org/2000/svg"
   fill="currentColor"
 >
-  <use href="/assets/bootstrap-icons.svg#{props['bootstrapId']}"></use>
+  <use href="{rootUrl()}/assets/bootstrap-icons.svg#{props['bootstrapId']}"></use>
+
+  <script>
+    import config from '../../../_data/config'
+
+    export default class {
+      rootUrl() {
+        return config().root_url
+      }
+    }
+  </script>
 </icon>
