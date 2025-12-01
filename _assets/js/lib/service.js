@@ -38,6 +38,6 @@ export default class Service {
   }
 
   hierarchy() {
-    return this.d['d_breadcrumb'].join(' » ')
+    return this.d['hierarchy']
   }
 }

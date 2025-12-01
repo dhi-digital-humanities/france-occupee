@@ -28,6 +28,8 @@ riot.register('results', Results)
 riot.register('world-map', WorldMap)
 riot.register('year-selector', YearSelector)
 
+console.log('fetching translations')
+
 // set up translations then mount all registered components
 i18n.fetch(`${config().root_url}/data/translations.json`).then((data) => {
     console.log('translations loaded')

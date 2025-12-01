@@ -7,7 +7,7 @@
 
     export default class {
       onMounted(props, state) {
-        state['map'] = this.buildMap()
+        this.buildMap()
 
         const observer = new ResizeObserver((entries, observer) => {
           state['map'].invalidateSize()
@@ -33,12 +33,27 @@
         })
         layer.addTo(map)
 
-        return map
+        const markers = L.layerGroup()
+        markers.addTo(map)
+
+        this.state['map'] = map
+        this.state['markers'] = markers
       }
 
-      onUpdated(props) {
+      onUpdated(props, state) {
+        const data = props['mapData']
+        // console.log(data)
         // Thuy: here, `props['mapData]` has the data
         // console.log(props['mapsData'])
+        // for example:
+
+        const markers = state['markers']
+
+        markers.clearLayers()
+        for (const service of data['results']) {
+          const marker = L.marker(service.geo())
+          markers.addLayer(marker)
+        }
       }
     }
   </script>

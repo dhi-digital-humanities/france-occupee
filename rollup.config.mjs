@@ -48,4 +48,20 @@ const database = {
   ]
 }
 
-export default [app, database]
+const loader = {
+  input: '_assets/js/loader.js',
+  output: {
+    file: 'assets/loader.js',
+    format: optimize ? 'iife' : 'esm',
+    sourcemap: !optimize
+  },
+  plugins: [
+    nodeResolve(),
+    commonjs(),
+    replace(envReplacements),
+    riot(),
+    ...(optimize ? [terser()] : [])
+  ]
+}
+
+export default [app, database, loader]

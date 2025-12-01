@@ -25,6 +25,9 @@ const setup = async () => {
   storage['roots'] = {}
 
   for (const [id, service] of Object.entries(storage['services'])) {
+    // build hierarchy
+    service['hierarchy'] = service['d_breadcrumb'].join(' » ')
+
     // add source
     const source_id = service['source_id']
     service['source'] = storage['sources'][source_id]
@@ -112,6 +115,9 @@ database.action('services', data => {
 
     const address = dig(record, ['place', 'current_street'])
     if (!matchesTerms(criteria['address'], address)) return false
+
+    const organization = record['hierarchy']
+    if (!matchesTerms(criteria['organization'], organization)) return false
 
     if (!criteria['fav']) {
       if (!matchesTerms(criteria['terms'], [name, city, address])) return false
