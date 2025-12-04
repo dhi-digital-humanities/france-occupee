@@ -1,6 +1,6 @@
 import * as riot from 'riot'
 
-import {i18n, RiotPlugins, BusRiotPlugin, Url} from '@wendig/lib'
+import {i18n, RiotPlugins, BusRiotPlugin} from '@wendig/lib'
 
 import config from '../../_data/config'
 import {detectLocale} from './lib/util'
