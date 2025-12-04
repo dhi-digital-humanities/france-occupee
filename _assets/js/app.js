@@ -1,8 +1,9 @@
 import * as riot from 'riot'
 
-import {i18n, RiotPlugins, BusRiotPlugin} from '@wendig/lib'
+import {i18n, RiotPlugins, BusRiotPlugin, Url} from '@wendig/lib'
 
 import config from '../../_data/config'
+import {detectLocale} from './lib/util'
 
 // import the component
 import App from './components/app.riot'
@@ -34,15 +35,15 @@ console.log('fetching translations')
 
 // set up translations then mount all registered components
 i18n.fetch(`${config().root_url}/data/translations.json`).then((data) => {
-    console.log('translations loaded')
+  console.log('translations loaded')
 
-    RiotPlugins.setup(riot)
-    riot.install(RiotPlugins.i18n)
-    riot.install(RiotPlugins.parent)
-    riot.install(RiotPlugins.setTitle)
-    riot.install(BusRiotPlugin)
+  RiotPlugins.setup(riot)
+  riot.install(RiotPlugins.i18n)
+  riot.install(RiotPlugins.parent)
+  riot.install(RiotPlugins.setTitle)
+  riot.install(BusRiotPlugin)
 
-    i18n.setLocale('fr')
+  i18n.setLocale(detectLocale())
 
-    riot.mount('[is]')
+  riot.mount('[is]')
 })
