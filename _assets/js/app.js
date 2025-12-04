@@ -13,6 +13,7 @@ import MainSearch from './components/main_search.riot'
 import Pagination from './components/pagination.riot'
 import Results from './components/results.riot'
 import SubForm from './components/sub_form.riot'
+import TreeView from './components/tree_view.riot'
 import WorldMap from './components/world_map.riot'
 import YearSelector from './components/year_selector.riot'
 
@@ -23,8 +24,9 @@ riot.register('icon', Icon)
 riot.register('fo-input', Input)
 riot.register('main-search', MainSearch)
 riot.register('pagination', Pagination)
-riot.register('sub-form', SubForm)
 riot.register('results', Results)
+riot.register('sub-form', SubForm)
+riot.register('tree-view', TreeView)
 riot.register('world-map', WorldMap)
 riot.register('year-selector', YearSelector)
 

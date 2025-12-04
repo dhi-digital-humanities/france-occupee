@@ -1,17 +1,21 @@
 <year-selector>
   <div class="mb-2">{cap(t('year_prompt'))}</div>
 
-  <div class="btn-group btn-group-sm w-100">
+  <div class="btn-group w-100" data-toggle="buttons">
     <template each={year in years()}>
-      <input
-        type="checkbox"
-        class="btn-check"
-        id="btn-check-year-{year}"
-        value={year}
-        checked={isChecked(year)}
-        onchange={event => toggle(year, event)}
-      />
-      <label class="btn btn-primary" for="btn-check-year-{year}">{year}</label>
+      <label
+        class="btn btn-primary w-6th {isChecked(year) ? 'active' : ''}"
+        onclick={event => toggle(year, event)}
+      >
+        <input
+          type="checkbox"
+          class="btn-check"
+          id="btn-check-year-{year}"
+          value={year}
+          onchange={event => toggle(year, event)}
+        />
+        {year}
+      </label>
     </template>
   </div>
   
@@ -47,6 +51,8 @@
         event.preventDefault()
         event.stopPropagation()
         event.stopImmediatePropagation()
+
+        console.log('x')
 
         let years = this.fromUrl()
 

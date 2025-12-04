@@ -1,26 +1,26 @@
 <main-search>
   <form>
     <ul class="nav nav-tabs">
-      <li class="nav-item">
+      <li class="nav-item {isFav() ? '' : 'active'}">
         <a
-          class="nav-link {isFav() ? '' : 'active'}"
-          data-bs-toggle="tab"
-          data-bs-target="#search-pane"
+          class="nav-link"
+          data-toggle="tab"
+          data-target="#search-pane"
           href="#"
         >{cap(t('search'))}</a>
       </li>
-      <li class="nav-item">
+      <li class="nav-item {!isFav() ? '' : 'active'}">
         <a
-          class="nav-link {!isFav() ? '' : 'active'}"
-          data-bs-toggle="tab"
-          data-bs-target="#favorites-pane"
+          class="nav-link"
+          data-toggle="tab"
+          data-target="#favorites-pane"
           href="#"
         >{cap(t('favorites'))}</a>
       </li>
     </ul>
 
     <div class="tab-content">
-      <div class="tab-pane fade {isFav() ? '' : 'show active'} pt-3" id="search-pane">
+      <div class="tab-pane fade {isFav() ? '' : 'active in'} pt-3" id="search-pane">
         <div
           is="fo-input"
           name="terms"
@@ -35,9 +35,15 @@
           on-input={props.onInput}
           criteria={props['criteria']}
         }></div>
+
+        <div
+          is-deactivated="tree-view"
+          on-input={props.onInput}
+          criteria={props['criteria']}
+        ></div>
       </div>
       
-      <div class="tab-pane fade {!isFav() ? '' : 'show active'}" id="favorites-pane">
+      <div class="tab-pane fade {!isFav() ? '' : 'active in'}" id="favorites-pane">
         <button class="btn btn-warning d-block mt-3 w-100">{cap(t('export_csv'))}</button>
         <button class="btn btn-primary d-block mt-3 w-100">{cap(t('create_link'))}</button>
       </div>
@@ -47,16 +53,15 @@
   </form>
 
   <script>
-    import {Tab} from 'bootstrap'
+    // import {* as bs} from 'bootstrap'
     import {Url} from '@wendig/lib'
 
     export default class {
       onMounted(props, state) {
-        const toggles = this.root.querySelectorAll("[data-bs-toggle='tab']")
+        const toggles = this.root.querySelectorAll("[data-toggle='tab']")
         for (const t of toggles) {
-          const target = 
-          t.addEventListener('show.bs.tab', event => {
-            const target = t.getAttribute('data-bs-target')
+          jQuery(t).on('show.bs.tab', event => {
+            const target = t.getAttribute('data-target')
             const fav = (target === '#favorites-pane' ? 'true' : null)
 
             props.onInput({fav})

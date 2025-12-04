@@ -18,6 +18,10 @@ const setup = async () => {
   const services = await fetch(`${config().root_url}/data/service.json`).then(r => r.json())
   const sources = await fetch(`${config().root_url}/data/source.json`).then(r => r.json())
 
+  // console.log(places.length)
+  // console.log(services.length)
+  // console.log(sources.length)
+
   storage['places'] = util.indexBy(places, 'id')
   storage['services'] = util.indexBy(services, 'id')
   storage['sources'] = util.indexBy(sources, 'id')
@@ -78,6 +82,19 @@ const matchesIds = (target, actual) => {
   return target.indexOf(actual) != -1
 }
 
+const matchesParentId = (target, actual) => {
+  if (!target) return true
+  if (target === -1) return !actual
+  
+  return target === actual
+}
+
+const matchesExactly = (target, actual) => {
+  if (!target) return true
+
+  return target === actual
+}
+
 const matchesYears = (years, record) => {
   if (!years) return true
   const actual = dig(record, ['source', 'd_edition_year'])
@@ -118,6 +135,12 @@ database.action('services', data => {
 
     const organization = record['hierarchy']
     if (!matchesTerms(criteria['organization'], organization)) return false
+
+    const parentId = record['parent_id']
+    if (!matchesParentId(criteria['parentId'], parentId)) return false
+
+    const country = dig(record, ['source', 'country'])
+    if (!matchesExactly(criteria['country'], country)) return false
 
     if (!criteria['fav']) {
       if (!matchesTerms(criteria['terms'], [name, city, address])) return false
@@ -171,6 +194,11 @@ const sanitizeCriteria = (input) => {
       split(/\s*,\s*/).
       map(y => parseInt(y))
   }
+  criteria['parentId'] = (
+    criteria['parentId'] ?
+    parseInt(criteria['parentId'] || -1) :
+    null
+  )
 
   return criteria
 }

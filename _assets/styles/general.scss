@@ -1,5 +1,9 @@
+.position-relative {
+  position: relative !important;
+}
+
 body {
-  background-color: rgb(255, 253, 234);
+  // background-color: rgb(255, 253, 234);
 }
 
 [is='world-map'] {
@@ -22,6 +26,10 @@ table {
   th.text-column {
     width: 300px;
   }
+}
+
+[is='main-search'] {
+  padding-bottom: 30px;
 }
 
 [is='pagination'] {

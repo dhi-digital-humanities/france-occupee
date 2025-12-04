@@ -16,7 +16,12 @@
         "map_view": "affichage carte",
         "list_view": "affichage liste",
         "create_link": "créer un lien à partir de cette liste",
-        "export_csv": "exporter en CSV"
+        "export_csv": "exporter en CSV",
+        "services_allemands": "services allemands",
+        "services_francais": "services français",
+        "uncheck_all": "tout déselectionner",
+        "translation": "traduction",
+        "pending": "à vérifier"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",

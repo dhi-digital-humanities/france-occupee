@@ -1,0 +1,106 @@
+<tree-view class="{props['margin'] && 'ms-2'}">
+  <template if={isRoot()}>
+    <div
+      is="tree-view"
+      parent-id={-1}
+      country="de"
+      label={cap(t('services_allemands'))}
+      on-input={props.onInput}
+      criteria={props['criteria']}
+      actives={state['actives']}
+    ></div>
+
+    <div
+      is="tree-view"
+      parent-id={-1}
+      country="fr"
+      label={cap(t('services_francais'))}
+      on-input={props.onInput}
+      criteria={props['criteria']}
+      actives={state['actives']}
+    ></div>
+  </template>
+
+  <template if={!isRoot()}>
+    <a
+      if={!state['data'] || state['data']['results'].length > 0}
+      href="#"
+      onclick={event => onToggle(event)}
+      class="me-1"
+    >
+      <svg if={!isExpanded()} is="icon" bootstrap-id="arrows-expand"></svg>
+      <svg if={isExpanded()} is="icon" bootstrap-id="arrows-collapse"></svg>
+    </a>
+
+    <input type="checkbox" onchange={event => onChange(event)}></input>
+
+    {props.label}
+
+    <template if={state['data'] && !state['hidden']}>
+      <ul class="list-unstyled">
+        <li each={service in state['data']['results']}>
+          <div
+            is="tree-view"
+            parent-id={service.id()}
+            country={props['country']}
+            label={service.name()}
+            on-input={props.onInput}
+            criteria={props['criteria']}
+            margin={true}
+          ></div>
+        </li>
+      </ul>
+    </template>
+  </template>
+
+  <script>
+    import search from '../lib/search.instance'
+
+    export default class {
+      onBeforeMount(props, state) {
+        state['actives'] = props['actives'] || {}
+      }
+
+      isRoot() {
+        return !this.props['parentId'] && !this.props['country']
+      }
+
+      parentId() {
+        return this.props['parentId'] || -1
+      }
+
+      isExpanded() {
+        return this.state['data'] && !this.state['hidden']
+      }
+
+      onChange(event) {
+
+      }
+
+      onToggle(event) {
+        event.preventDefault()
+
+        if (this.state['data']) {
+          this.state['hidden'] = !this.state['hidden']
+          this.update()
+        } else {
+          this.fetch()
+        }
+      }
+
+      fetch() {
+        const params = {
+          parentId: this.parentId(),
+          country: this.props['country'],
+          perPage: 'max'
+        }
+
+        search.services(params).then(data => {
+          console.log(data)
+
+          this.update({data})
+        })
+      }
+    }
+  </script>
+</tree-view>

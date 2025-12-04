@@ -1,0 +1,99 @@
+$spacers: (
+  0: 0,
+  1: 0.2rem,
+  2: 0.5rem,
+  3: 1rem,
+  4: 1.5rem,
+  5: 2rem,
+  6: 3rem,
+  7: 5rem
+);
+
+$sides: (
+  s: 'left',
+  e: 'right',
+  t: 'top',
+  b: 'bottom'
+);
+
+@each $size, $amount in $spacers {
+  .m-#{$size} {
+    margin: $amount !important;
+  }
+
+  .mx-#{$size} {
+    margin-right: $amount !important;
+    margin-left: $amount !important;
+  }
+
+  .my-#{$size} {
+    margin-top: $amount !important;
+    margin-bottom: $amount !important;
+  }
+
+  .p-#{$size} {
+    padding: $amount !important;
+  }
+
+  .px-#{$size} {
+    padding-right: $amount !important;
+    padding-left: $amount !important;
+  }
+
+  .py-#{$size} {
+    padding-top: $amount !important;
+    padding-bottom: $amount !important;
+  }
+
+  @each $s, $side in $sides {
+    .m#{$s}-#{$size} {
+      margin-#{$side}: $amount !important;
+    }
+
+    .p#{$s}-#{$size} {
+      padding-#{$side}: $amount !important;
+    }
+  }
+}
+
+.ml-auto {
+  margin-left: auto !important;
+}
+
+.mr-auto {
+  margin-right: auto !important;
+}
+
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.my-auto {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.d-block {
+  display: block !important;
+}
+
+.justify-content-end {
+  justify-content: end !important;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+.w-6th {
+  width: calc(100% / 6) !important;
+}
