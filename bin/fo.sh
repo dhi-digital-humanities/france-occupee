@@ -1,6 +1,9 @@
 #!/bin/bash -e
 
-source .env
+# Load .env file if it exists
+if [ -f .env ]; then
+    source .env
+fi
 
 function fo-import {
     rm -rf data

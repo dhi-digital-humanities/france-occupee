@@ -18,6 +18,7 @@
     "dotenv": "^17.2.3",
     "feather-icons": "^4.29.0",
     "leaflet": "^1.9.3",
+    "leaflet.markercluster": "^1.5.3",
     "protomaps-leaflet": "^5.1.0",
     "riot": "^10.1.0",
     "rollup": "^4.24.4",
@@ -32,10 +33,12 @@
     "dev-js": "rollup -c -w --no-watch.clearScreen",
     "dev-css": "sass -c -w --update --source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
     "dev-tile-server": "http-server ./data/tiles --cors",
-    "build-11ty": "APP_ENV=production npx @11ty/eleventy",
-    "build-js": "APP_ENV=production rollup -c --environment APP_ENV:production",
+    
+    "build-11ty": "bash -c \"APP_ENV=production npx @11ty/eleventy\"",
+    "build-js": "bash -c \"APP_ENV=production rollup -c --environment APP_ENV:production\"",
     "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
-    "deploy": "bin/fo.sh deploy",
-    "import": "bin/fo.sh import"
+    
+    "deploy": "node bin/fo.js deploy",
+    "import": "node bin/fo.js import"
   }
 }

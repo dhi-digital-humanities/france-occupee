@@ -30,4 +30,16 @@ export default class Search extends WendigSearch {
       return data
     })
   }
+
+  servicesByPlace(placeId, page = 1, perPage = 10) {
+    return this.postMessage({
+      action: 'services-by-place',
+      placeId: placeId,
+      page: page,
+      perPage: perPage
+    }).then(data => {
+      data['results'] = data['results'].map(r => new Service(r))
+      return data
+    })
+  }
 }

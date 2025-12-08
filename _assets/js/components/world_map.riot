@@ -4,6 +4,9 @@
   <script>
     import * as L from 'leaflet'
     import * as protomapsL from 'protomaps-leaflet'
+    import 'leaflet.markercluster'
+    import config from '../../../_data/config'
+    import search from '../lib/search.instance'
 
     export default class {
       onMounted(props, state) {
@@ -19,9 +22,12 @@
         // Thuy, you can initialize the map but there is no data yet
 
         const element = this.root.querySelector('.map')
-        const map = L.map(element).
-          setView([51.505, -0.09], 6).
-          setMaxZoom(6);
+        const map = L.map(element, {
+          zoomControl: true,
+          minZoom: 3,
+          maxZoom: 18
+        }).
+          setView([51.505, -0.09], 6);
         // const url = 'https://build.protomaps.com/20251103.pmtiles'
         // const url = '/assets/overview.pmtiles'
         const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
@@ -33,11 +39,264 @@
         })
         layer.addTo(map)
 
-        const markers = L.layerGroup()
+        const markers = L.markerClusterGroup({
+          iconCreateFunction: (cluster) => {
+            return this.createClusterIcon(cluster)
+          },
+          maxClusterRadius: 50
+        })
         markers.addTo(map)
 
         this.state['map'] = map
         this.state['markers'] = markers
+      }
+
+      getIconForCountry(country) {
+        const rootUrl = config().root_url || ''
+        let iconUrl = `${rootUrl}/assets/images/marker-icon.png`
+        
+        if (country === 'fr') {
+          iconUrl = `${rootUrl}/assets/images/f-fr.png`
+        } else if (country === 'de') {
+          iconUrl = `${rootUrl}/assets/images/de.png`
+        }
+
+        return L.icon({
+          iconUrl: iconUrl,
+          iconSize: [25, 25],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -12]
+        })
+      }
+
+      createClusterIcon(cluster) {
+        const rootUrl = config().root_url || ''
+        const markers = cluster.getAllChildMarkers()
+        
+        // Đếm số lượng theo từng loại country
+        let frCount = 0
+        let deCount = 0
+        let otherCount = 0
+
+        markers.forEach(marker => {
+          const country = marker.options.country
+          if (country === 'fr') {
+            frCount++
+          } else if (country === 'de') {
+            deCount++
+          } else {
+            otherCount++
+          }
+        })
+
+        // Xác định icon và số lượng hiển thị
+        let iconUrl
+        let count
+        let hasBoth = frCount > 0 && deCount > 0
+
+        if (hasBoth) {
+          // Nếu có cả fr và de, dùng f-fr-de.png và tổng số lượng
+          iconUrl = `${rootUrl}/assets/images/f-fr-de.png`
+          count = frCount + deCount + otherCount
+        } else if (frCount > 0) {
+          // Chỉ có fr
+          iconUrl = `${rootUrl}/assets/images/f-fr.png`
+          count = frCount + otherCount
+        } else if (deCount > 0) {
+          // Chỉ có de
+          iconUrl = `${rootUrl}/assets/images/de.png`
+          count = deCount + otherCount
+        } else {
+          // Không có fr hoặc de
+          iconUrl = `${rootUrl}/assets/images/marker-icon.png`
+          count = otherCount
+        }
+
+        // Tạo div chứa icon và số lượng
+        const div = L.DomUtil.create('div', 'custom-cluster-icon')
+        div.innerHTML = `
+          <div style="position: relative; width: 40px; height: 40px;">
+            <img src="${iconUrl}" style="width: 40px; height: 40px; object-fit: contain;" />
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              color: white;
+              font-weight: bold;
+              font-size: 14px;
+              text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+              pointer-events: none;
+            ">${count}</div>
+          </div>
+        `
+        
+        return L.divIcon({
+          html: div.innerHTML,
+          className: 'custom-cluster-div-icon',
+          iconSize: L.point(40, 40)
+        })
+      }
+
+      createPopupContent(service) {
+        const address = service.address()
+        const city = service.city()
+        const [lat, lng] = service.geo()
+        const placeId = service.placeId()
+        const placeName = service.placeName()
+        
+        // Tạo link Street View
+        const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`
+        // Tạo embed URL cho Street View (panoramic image)
+        const streetViewEmbedUrl = `https://www.google.com/maps/embed?pb=!4v${Date.now()}!6m8!1m7!1s${lat},${lng}!2m2!1d${lat}!2d${lng}!3f0!4f0!5f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v${Date.now()}`
+        
+        // Tạo HTML cho popup
+        const popupContent = `
+          <div class="service-popup" style="min-width: 600px; max-width: 800px;" data-place-id="${placeId}">
+            ${placeName ? `
+              <div class="popup-title" style="padding: 15px 15px 10px 15px; font-size: 16px; font-weight: bold; color: #333; border-bottom: 1px solid #eee;">
+                ${placeName}
+              </div>
+            ` : ''}
+            <div class="popup-tabs" style="display: flex; border-bottom: 2px solid #ddd; margin-bottom: 0;">
+              <button class="tab-btn active" data-tab="info" style="
+                flex: 1;
+                padding: 12px;
+                border: none;
+                background: white;
+                cursor: pointer;
+                border-bottom: 2px solid #999;
+                color: #333;
+                font-weight: normal;
+                font-size: 13px;
+              ">INFORMATIONS</button>
+              <button class="tab-btn" data-tab="services" style="
+                flex: 1;
+                padding: 12px;
+                border: none;
+                background: #f5f5f5;
+                cursor: pointer;
+                color: #666;
+                font-size: 13px;
+              ">SERVICES</button>
+            </div>
+            
+            <div id="tab-info" class="tab-content active" style="display: block; padding: 15px;">
+              <div style="margin-bottom: 15px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">Adresse</h4>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="flex: 1;">${address || ''} ${city || ''}</span>
+                  <a href="${streetViewUrl}" target="_blank" style="
+                    color: #0066cc;
+                    text-decoration: none;
+                    font-size: 12px;
+                    white-space: nowrap;
+                  ">Street view</a>
+                </div>
+              </div>
+              
+              <div style="margin-top: 15px; width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; position: relative;">
+                <iframe
+                  src="${streetViewEmbedUrl}"
+                  width="100%"
+                  height="100%"
+                  style="border:0;"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+              </div>
+            </div>
+            
+            <div id="tab-services" class="tab-content" style="display: none; padding: 15px;">
+              <div class="services-table-container">
+                <table class="services-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                  <thead>
+                    <tr style="background-color: #f8f8f8; border-bottom: 2px solid #ddd;">
+                      <th style="padding: 8px; text-align: left; font-weight: bold; border-right: 1px solid #ddd;">Date</th>
+                      <th style="padding: 8px; text-align: left; font-weight: bold; border-right: 1px solid #ddd;">Nom</th>
+                      <th style="padding: 8px; text-align: left; font-weight: bold; border-right: 1px solid #ddd;">Organisation</th>
+                      <th style="padding: 8px; text-align: center; font-weight: bold;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="services-tbody">
+                    <tr>
+                      <td colspan="4" style="padding: 20px; text-align: center; color: #999;">Chargement...</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="services-pagination" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #666;">
+                  <div class="pagination-controls" style="display: flex; align-items: center; gap: 5px;">
+                    <button class="page-btn" data-action="first" style="padding: 4px 8px; border: 1px solid #ddd; background: white; cursor: pointer;">««</button>
+                    <button class="page-btn" data-action="prev" style="padding: 4px 8px; border: 1px solid #ddd; background: white; cursor: pointer;">«</button>
+                    <input type="number" class="page-input" value="1" min="1" style="width: 50px; padding: 4px; text-align: center; border: 1px solid #ddd;">
+                    <span class="page-info">sur 1</span>
+                    <button class="page-btn" data-action="next" style="padding: 4px 8px; border: 1px solid #ddd; background: white; cursor: pointer;">»</button>
+                    <button class="page-btn" data-action="last" style="padding: 4px 8px; border: 1px solid #ddd; background: white; cursor: pointer;">»»</button>
+                  </div>
+                  <div class="pagination-info"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+        
+        return popupContent
+      }
+
+      async loadServicesForPlace(element, placeId, page = 1) {
+        const tbody = element.querySelector('.services-tbody')
+        const pagination = element.querySelector('.services-pagination')
+        
+        try {
+          const data = await search.servicesByPlace(placeId, page, 10)
+          
+          // Render table rows
+          if (data.results.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #999;">Aucun service trouvé</td></tr>'
+          } else {
+            tbody.innerHTML = data.results.map(service => {
+              const date = service.date() || ''
+              const name = service.name() || ''
+              const hierarchy = service.hierarchy() || ''
+              return `
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 8px; border-right: 1px solid #eee;">${date}</td>
+                  <td style="padding: 8px; border-right: 1px solid #eee;">${name}</td>
+                  <td style="padding: 8px; border-right: 1px solid #eee;">${hierarchy}</td>
+                  <td style="padding: 8px; text-align: center;">
+                    <button class="action-btn" style="background: none; border: none; color: #0066cc; cursor: pointer; font-size: 16px;">+</button>
+                  </td>
+                </tr>
+              `
+            }).join('')
+          }
+          
+          // Update pagination
+          const pageInput = pagination.querySelector('.page-input')
+          const pageInfo = pagination.querySelector('.page-info')
+          const paginationInfo = pagination.querySelector('.pagination-info')
+          
+          pageInput.value = data.page
+          pageInput.max = Math.ceil(data.total / data.perPage)
+          pageInfo.textContent = `sur ${Math.ceil(data.total / data.perPage)}`
+          paginationInfo.textContent = `Lignes de ${((data.page - 1) * data.perPage) + 1} à ${Math.min(data.page * data.perPage, data.total)} sur ${data.total}`
+          
+          // Update pagination buttons
+          const firstBtn = pagination.querySelector('[data-action="first"]')
+          const prevBtn = pagination.querySelector('[data-action="prev"]')
+          const nextBtn = pagination.querySelector('[data-action="next"]')
+          const lastBtn = pagination.querySelector('[data-action="last"]')
+          
+          firstBtn.disabled = data.page === 1
+          prevBtn.disabled = data.page === 1
+          nextBtn.disabled = data.page >= Math.ceil(data.total / data.perPage)
+          lastBtn.disabled = data.page >= Math.ceil(data.total / data.perPage)
+          
+        } catch (error) {
+          console.error('Error loading services:', error)
+          tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #f00;">Erreur lors du chargement</td></tr>'
+        }
       }
 
       onUpdated(props, state) {
@@ -51,7 +310,97 @@
 
         markers.clearLayers()
         for (const service of data['results']) {
-          const marker = L.marker(service.geo())
+          const country = service.country()
+          const icon = this.getIconForCountry(country)
+          const marker = L.marker(service.geo(), { 
+            icon: icon,
+            country: country  // Lưu country vào marker để dùng khi clustering
+          })
+          
+          // Lưu service vào marker để dùng khi click
+          marker.service = service
+          
+          // Tạo popup với thông tin service
+          const popupContent = this.createPopupContent(service)
+          marker.bindPopup(popupContent, {
+            maxWidth: 800,
+            minWidth: 600,
+            className: 'service-popup-container'
+          })
+          
+          // Xử lý sự kiện sau khi popup được mở
+          marker.on('popupopen', () => {
+            const popup = marker.getPopup()
+            const element = popup.getElement()
+            if (element) {
+              const placeId = parseInt(element.querySelector('.service-popup').getAttribute('data-place-id'))
+              
+              // Tab switching
+              const tabButtons = element.querySelectorAll('.tab-btn')
+              const tabContents = element.querySelectorAll('.tab-content')
+              
+              // Load services khi click vào tab SERVICES
+              let servicesLoaded = false
+              
+              tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                  const tabName = btn.getAttribute('data-tab')
+                  
+                  // Cập nhật active tab button
+                  tabButtons.forEach(b => {
+                    b.style.background = '#f5f5f5'
+                    b.style.borderBottom = '2px solid #999'
+                    b.style.color = '#666'
+                    b.style.fontWeight = 'normal'
+                  })
+                  btn.style.background = 'white'
+                  btn.style.borderBottom = '2px solid #999'
+                  btn.style.color = '#333'
+                  
+                  // Cập nhật active tab content
+                  tabContents.forEach(content => {
+                    content.style.display = 'none'
+                  })
+                  const activeContent = element.querySelector(`#tab-${tabName}`)
+                  if (activeContent) {
+                    activeContent.style.display = 'block'
+                    
+                    // Load services khi chuyển sang tab SERVICES
+                    if (tabName === 'services' && !servicesLoaded) {
+                      this.loadServicesForPlace(activeContent, placeId)
+                      servicesLoaded = true
+                    }
+                  }
+                })
+              })
+              
+              // Pagination handlers cho tab SERVICES
+              const servicesTab = element.querySelector('#tab-services')
+              const pagination = servicesTab.querySelector('.services-pagination')
+              if (pagination) {
+                const pageInput = pagination.querySelector('.page-input')
+                const firstBtn = pagination.querySelector('[data-action="first"]')
+                const prevBtn = pagination.querySelector('[data-action="prev"]')
+                const nextBtn = pagination.querySelector('[data-action="next"]')
+                const lastBtn = pagination.querySelector('[data-action="last"]')
+                
+                const loadPage = (page) => {
+                  this.loadServicesForPlace(servicesTab, placeId, page)
+                }
+                
+                firstBtn.addEventListener('click', () => loadPage(1))
+                prevBtn.addEventListener('click', () => loadPage(Math.max(1, parseInt(pageInput.value) - 1)))
+                nextBtn.addEventListener('click', () => loadPage(Math.min(parseInt(pageInput.max), parseInt(pageInput.value) + 1)))
+                lastBtn.addEventListener('click', () => loadPage(parseInt(pageInput.max)))
+                
+                pageInput.addEventListener('change', () => {
+                  const page = Math.max(1, Math.min(parseInt(pageInput.max), parseInt(pageInput.value) || 1))
+                  loadPage(page)
+                })
+              }
+            }
+          })
+          
           markers.addLayer(marker)
         }
       }
