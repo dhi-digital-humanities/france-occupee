@@ -43,3 +43,40 @@ table {
     margin-right: 10px;
   }
 }
+
+[is='tree-view'] {
+  .control {
+    display: flex;
+    align-items: top;
+
+    a.toggle {
+      display: inline-block;
+      width: 18px;
+      height: 24px;
+    }
+
+    input[type='checkbox'] {
+      display: inline-block;
+      margin: 0;
+      margin-top: 5px;
+      margin-right: 5px;
+      width: 14px;
+      height: 14px;
+    }
+
+    .input-spacer {
+      min-width: 14px;
+      height: 24px;
+      margin-right: 6px;
+    }
+
+    .name {
+      position: relative;
+      top: 3px;
+    }
+  }
+
+  &.with-margin {
+    margin-left: 18px;
+  }
+}

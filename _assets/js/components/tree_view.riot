@@ -1,4 +1,4 @@
-<tree-view class="{props['margin'] && 'ms-2'}">
+<tree-view class="{props['margin'] && 'with-margin'}">
   <template if={isRoot()}>
     <div
       is="tree-view"
@@ -8,6 +8,7 @@
       on-input={props.onInput}
       criteria={props['criteria']}
       actives={state['actives']}
+      depth={depth() + 1}
     ></div>
 
     <div
@@ -18,35 +19,50 @@
       on-input={props.onInput}
       criteria={props['criteria']}
       actives={state['actives']}
+      depth={depth() + 1}
     ></div>
   </template>
 
   <template if={!isRoot()}>
-    <a
-      if={!state['data'] || state['data']['results'].length > 0}
-      href="#"
-      onclick={event => onToggle(event)}
-      class="me-1"
-    >
-      <svg if={!isExpanded()} is="icon" bootstrap-id="arrows-expand"></svg>
-      <svg if={isExpanded()} is="icon" bootstrap-id="arrows-collapse"></svg>
-    </a>
+    <div class="control">
+      <a
+        if={!state['data'] || state['data']['results'].length > 0}
+        href="#"
+        onclick={event => onToggle(event)}
+        class="toggle me-1"
+      >
+        <img if={!isExpanded()} class="tee-plus" src="{config.root_url}/assets/images/plus.gif" />
+        <img if={isExpanded()} class="tee-plus" src="{config.root_url}/assets/images/minus.gif" />
+      </a>
 
-    <input type="checkbox" onchange={event => onChange(event)}></input>
+      <div if={state['data'] && state['data']['results'].length === 0} class="input-spacer"></div>
 
-    {props.label}
+      <input
+        type="checkbox"
+        onchange={event => onChange(event)}
+        checked={state['checked']}
+      />
+
+      <div class="name">
+        {props.label}
+      </div>
+    </div>
 
     <template if={state['data'] && !state['hidden']}>
       <ul class="list-unstyled">
-        <li each={service in state['data']['results']}>
+        <li each={e in Object.entries(state['data']['results'])}>
           <div
             is="tree-view"
-            parent-id={service.id()}
+            parent-id={e[1].id()}
             country={props['country']}
-            label={service.name()}
+            label={e[1].name()}
             on-input={props.onInput}
             criteria={props['criteria']}
             margin={true}
+            depth={depth() + 1}
+            is-first={e[0] === 0}
+            is-last={e[0] === (state['data']['results'].length - 1)}
+            default-checked={state['checked']}
           ></div>
         </li>
       </ul>
@@ -54,11 +70,20 @@
   </template>
 
   <script>
+    import {util} from '@wendig/lib'
     import search from '../lib/search.instance'
+    import config from '../../../_data/config'
 
     export default class {
+      constructor() {
+        this.config = config
+      }
+
       onBeforeMount(props, state) {
+        state['checked'] = props['defaultChecked'] || false
         state['actives'] = props['actives'] || {}
+
+        this.bus.on('tree-view:any-changed', event => this.onAnyChanged())
       }
 
       isRoot() {
@@ -73,8 +98,12 @@
         return this.state['data'] && !this.state['hidden']
       }
 
-      onChange(event) {
-
+      depth() {
+        return (
+          this.props['depth'] !== undefined ?
+          0 :
+          this.props['depth']
+        )
       }
 
       onToggle(event) {
@@ -86,6 +115,68 @@
         } else {
           this.fetch()
         }
+
+        console.log('parent', this.parent)
+      }
+
+      onChange(event) {
+        const newState = this.input().checked
+
+        this.setValue(newState)
+        this.bus.emit('tree-view:any-changed')
+        this.update()
+      }
+
+      input() {
+        return this.root.querySelector(':scope > .control > input')
+      }
+
+      value() {
+        
+      }
+
+      setValue(newValue) {
+        this.state['checked'] = newValue
+
+        for (const t of this.children()) {
+          t.setValue(newValue)
+        }
+      }
+
+      children() {
+        const childComponents = this.tags || {}
+        return childComponents['tree-view'] || []
+      }
+
+      onBeforeUpdate() {
+        if (!this.input()) return
+
+        this.input().checked = this.state['checked']
+      }
+
+      onAnyChanged() {
+        if (!this.input()) return
+
+        this.input().indeterminate = this.isIndeterminate()
+      }
+
+      isIndeterminate() {
+        if (!this.state['data']) return false
+        if (this.children().length === 0) return false
+
+        let tracker = null
+        for (const c of this.children()) {
+          if (c.isIndeterminate()) return true
+
+          if (tracker === null) {
+            tracker = c.state['checked']
+            continue
+          }
+
+          if (tracker !== c.state['checked']) return true
+        }
+
+        return false
       }
 
       fetch() {
@@ -96,7 +187,7 @@
         }
 
         search.services(params).then(data => {
-          console.log(data)
+          // console.log(data)
 
           this.update({data})
         })

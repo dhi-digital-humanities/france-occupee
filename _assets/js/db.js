@@ -1,5 +1,5 @@
-import {util} from '@wendig/lib'
-import {Database} from '@wendig/lib'
+import {indexBy} from './lib/util'
+import {Database, util} from '@wendig/lib'
 import config from '../../_data/config'
 
 
@@ -13,18 +13,60 @@ let storage = {
 let database = new Database()
 onmessage = database.handler
 
+const packTest = (services) => {
+  let test = indexBy(services, (a) => `${a['name']}-${a['place_id']}`, true)
+  for (const k of Object.keys(test)) {
+    if (test[k].length < 2) {
+      delete test[k]
+    }
+  }
+
+  let idMap = {}
+  let drop = []
+  for (const [k, values] of Object.entries(test)) {
+    let value = values[0]
+    value['source_ids'] = [value['source_id']]
+    value['parent_ids'] = [value['parent_source_id']]
+    value['place_ids'] = [value['place_id']]
+
+    for (const v of values.slice(1)) {
+      value['source_ids'].push(v['source_id'])
+      value['parent_ids'].push(v['parent_source_id'])
+      value['place_ids'].push(v['place_id'])
+
+      drop.push(v['id'])
+      idMap[v['id']] = value['id']
+    }
+
+    value['parent_ids'] = util.unique(value['parent_ids']).filter(e => e !== undefined)
+    value['place_ids'] = util.unique(value['place_ids']).filter(e => e !== undefined)
+    value['source_ids'] = util.unique(value['source_ids']).filter(e => e !== undefined)
+
+    // const keys = ['name', 'place_id', 'status']
+    // for (const key of keys) {
+    //   const values = util.unique(v.map(r => r[key]))
+    //   if (values.length > 1) {
+    //     console.log(k, v, key, values)
+    //   }
+    // }
+  }
+  console.log(test)
+}
+
 const setup = async () => {
   const places = await fetch(`${config().root_url}/data/place.json`).then(r => r.json())
-  const services = await fetch(`${config().root_url}/data/service.json`).then(r => r.json())
   const sources = await fetch(`${config().root_url}/data/source.json`).then(r => r.json())
+  const services = await fetch(`${config().root_url}/data/service.json`).then(r => r.json())
+
+  // packTest(services)
 
   // console.log(places.length)
   // console.log(services.length)
   // console.log(sources.length)
 
-  storage['places'] = util.indexBy(places, 'id')
-  storage['services'] = util.indexBy(services, 'id')
-  storage['sources'] = util.indexBy(sources, 'id')
+  storage['places'] = indexBy(places, 'id')
+  storage['services'] = indexBy(services, 'id')
+  storage['sources'] = indexBy(sources, 'id')
 
   storage['roots'] = {}
 
@@ -119,6 +161,7 @@ database.action('services', data => {
 
   const results = Object.values(storage['services']).filter(record => {
     if (record['name'] === true) return false // TODO: fix data
+    if (record['status'] === 'deleted') return false // TODO: fix data
 
     if (criteria['fav']) {
       if (!matchesIds(criteria['id'], record['id'])) return false
