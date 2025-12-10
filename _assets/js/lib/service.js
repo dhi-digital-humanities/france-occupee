@@ -40,4 +40,20 @@ export default class Service {
   hierarchy() {
     return this.d['hierarchy']
   }
+
+  country() {
+    return this.d['source']['country']
+  }
+
+  placeId() {
+    return this.d['place_id']
+  }
+
+  placeName() {
+    return this.d['place']['name'] || ''
+  }
+
+  imagePath() {
+    return this.d['place']['image_path'] || ''
+  }
 }

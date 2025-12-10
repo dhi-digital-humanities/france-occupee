@@ -4,6 +4,9 @@
   <script>
     import * as L from 'leaflet'
     import * as protomapsL from 'protomaps-leaflet'
+    import 'leaflet.markercluster'
+    import * as riot from 'riot'
+    import config from '../../../_data/config'
 
     export default class {
       onMounted(props, state) {
@@ -19,9 +22,12 @@
         // Thuy, you can initialize the map but there is no data yet
 
         const element = this.root.querySelector('.map')
-        const map = L.map(element).
-          setView([51.505, -0.09], 6).
-          setMaxZoom(6);
+        const map = L.map(element, {
+          zoomControl: true,
+          minZoom: 3,
+          maxZoom: 18
+        }).
+          setView([51.505, -0.09], 6);
         // const url = 'https://build.protomaps.com/20251103.pmtiles'
         // const url = '/assets/overview.pmtiles'
         const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
@@ -33,11 +39,116 @@
         })
         layer.addTo(map)
 
-        const markers = L.layerGroup()
+        const markers = L.markerClusterGroup({
+          iconCreateFunction: (cluster) => {
+            return this.createClusterIcon(cluster)
+          },
+          maxClusterRadius: 50
+        })
         markers.addTo(map)
 
         this.state['map'] = map
         this.state['markers'] = markers
+      }
+
+      getIconForCountry(country) {
+        const rootUrl = config().root_url || ''
+        let iconUrl = `${rootUrl}/assets/images/marker-icon.png`
+        
+        if (country === 'fr') {
+          iconUrl = `${rootUrl}/assets/images/f-fr.png`
+        } else if (country === 'de') {
+          iconUrl = `${rootUrl}/assets/images/de.png`
+        }
+
+        return L.icon({
+          iconUrl: iconUrl,
+          iconSize: [25, 25],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -12]
+        })
+      }
+
+      createClusterIcon(cluster) {
+        const rootUrl = config().root_url || ''
+        const markers = cluster.getAllChildMarkers()
+        
+        // Đếm số lượng theo từng loại country
+        let frCount = 0
+        let deCount = 0
+        let otherCount = 0
+
+        markers.forEach(marker => {
+          const country = marker.options.country
+          if (country === 'fr') {
+            frCount++
+          } else if (country === 'de') {
+            deCount++
+          } else {
+            otherCount++
+          }
+        })
+
+        // Xác định icon và số lượng hiển thị
+        let iconUrl
+        let count
+        let hasBoth = frCount > 0 && deCount > 0
+
+        if (hasBoth) {
+          // Nếu có cả fr và de, dùng f-fr-de.png và tổng số lượng
+          iconUrl = `${rootUrl}/assets/images/f-fr-de.png`
+          count = frCount + deCount + otherCount
+        } else if (frCount > 0) {
+          // Chỉ có fr
+          iconUrl = `${rootUrl}/assets/images/f-fr.png`
+          count = frCount + otherCount
+        } else if (deCount > 0) {
+          // Chỉ có de
+          iconUrl = `${rootUrl}/assets/images/de.png`
+          count = deCount + otherCount
+        } else {
+          // Không có fr hoặc de
+          iconUrl = `${rootUrl}/assets/images/marker-icon.png`
+          count = otherCount
+        }
+
+        // Tạo div chứa icon và số lượng
+        const div = L.DomUtil.create('div', 'custom-cluster-icon')
+        div.innerHTML = `
+          <div style="position: relative; width: 40px; height: 40px;">
+            <img src="${iconUrl}" style="width: 40px; height: 40px; object-fit: contain;" />
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              color: white;
+              font-weight: bold;
+              font-size: 14px;
+              text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+              pointer-events: none;
+            ">${count}</div>
+          </div>
+        `
+        
+        return L.divIcon({
+          html: div.innerHTML,
+          className: 'custom-cluster-div-icon',
+          iconSize: L.point(40, 40)
+        })
+      }
+
+      createPopupContent(service) {
+        // Tạo placeholder div, sẽ được thay thế khi popup mở
+        const container = document.createElement('div')
+        container.style.minWidth = '600px'
+        container.style.maxWidth = '800px'
+        container.innerHTML = '<div style="padding: 20px; text-align: center;">Chargement...</div>'
+        
+        // Lưu service để mount component sau
+        container._service = service
+        
+        return container
       }
 
       onUpdated(props, state) {
@@ -51,7 +162,92 @@
 
         markers.clearLayers()
         for (const service of data['results']) {
-          const marker = L.marker(service.geo())
+          const country = service.country()
+          const icon = this.getIconForCountry(country)
+          const marker = L.marker(service.geo(), { 
+            icon: icon,
+            country: country  // Lưu country vào marker để dùng khi clustering
+          })
+          
+          // Lưu service vào marker để dùng khi click
+          marker.service = service
+          
+          // Tạo popup với thông tin service
+          const popupContent = this.createPopupContent(service)
+          marker.bindPopup(popupContent, {
+            maxWidth: 800,
+            minWidth: 600,
+            className: 'service-popup-container'
+          })
+          
+          // Mount Riot component khi popup được mở
+          marker.on('popupopen', () => {
+            const popup = marker.getPopup()
+            if (!popup) return
+            
+            const element = popup.getElement()
+            if (element) {
+              const container = element.querySelector('div[style*="min-width: 600px"]')
+              if (container && container._service && !container._popupMounted) {
+                // Đợi một chút để đảm bảo DOM đã sẵn sàng
+                setTimeout(() => {
+                  try {
+                    const service = container._service
+                    const address = service.address()
+                    const city = service.city()
+                    const placeId = service.placeId()
+                    const placeName = service.placeName()
+                    const imagePath = service.imagePath()
+                    
+                    // Tạo element với attribute is để mount component
+                    container.innerHTML = `<div is="place-popup"></div>`
+                    const popupElement = container.querySelector('[is="place-popup"]')
+                    
+                    if (popupElement) {
+                      const mounted = riot.mount(popupElement, {
+                        placeId: placeId,
+                        placeName: placeName,
+                        address: address,
+                        city: city,
+                        imagePath: imagePath
+                      })
+                      
+                      // Popup luôn có chiều cao cố định 350px
+                      if (mounted && mounted.length > 0) {
+                        const popupWrapper = element.closest('.leaflet-popup-content-wrapper')
+                        const popupContent = element.closest('.leaflet-popup-content')
+                        if (popupWrapper) {
+                          popupWrapper.style.height = '350px'
+                          popupWrapper.style.maxHeight = '350px'
+                        }
+                        if (popupContent) {
+                          popupContent.style.height = '350px'
+                          popupContent.style.maxHeight = '350px'
+                        }
+                        // Cập nhật lại kích thước popup nếu có method
+                        if (popup && typeof popup.invalidateSize === 'function') {
+                          popup.invalidateSize()
+                        }
+                      }
+                      
+                      if (mounted && mounted.length > 0) {
+                        container._popupMounted = true
+                      } else {
+                        throw new Error('Failed to mount place-popup component')
+                      }
+                    } else {
+                      throw new Error('Could not find place-popup element')
+                    }
+                  } catch (error) {
+                    console.error('Error mounting place-popup:', error)
+                    console.error('Error details:', error.stack)
+                    container.innerHTML = `<div style="padding: 20px; color: red;">Erreur lors du chargement: ${error.message}</div>`
+                  }
+                }, 50)
+              }
+            }
+          })
+          
           markers.addLayer(marker)
         }
       }

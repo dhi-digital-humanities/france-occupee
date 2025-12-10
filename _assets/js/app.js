@@ -17,6 +17,7 @@ import SubForm from './components/sub_form.riot'
 import TreeView from './components/tree_view.riot'
 import WorldMap from './components/world_map.riot'
 import YearSelector from './components/year_selector.riot'
+import PlacePopup from './components/place_popup.riot'
 
 // register the component
 riot.register('app', App)
@@ -30,6 +31,7 @@ riot.register('sub-form', SubForm)
 riot.register('tree-view', TreeView)
 riot.register('world-map', WorldMap)
 riot.register('year-selector', YearSelector)
+riot.register('place-popup', PlacePopup)
 
 console.log('fetching translations')
 
