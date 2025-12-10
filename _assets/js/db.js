@@ -95,6 +95,9 @@ const setup = async () => {
     const parent = storage['services'][parent_id]
     parent['child_ids'] = parent['child_ids'] || []
     parent['child_ids'].push(service['id'])
+
+    // sort
+    service['sort'] = fold(service['name']).replaceAll(/ /g, '')
   }
 
   database.loaded()
@@ -107,12 +110,12 @@ const matchesTerms = (target, actual) => {
   if (!target) return true
   if (!actual) return false
 
-  const r = new RegExp(util.fold(target), 'i')
+  const r = new RegExp(fold(target), 'i')
   const actuals = (Array.isArray(actual) ? actual : [actual])
 
   for (const a of actuals) {
     if (!a) continue
-    if (util.fold(a).match(r)) return true
+    if (fold(a).match(r)) return true
   }
 
   return false
@@ -193,12 +196,7 @@ database.action('services', data => {
     return true
   })
 
-  const sorted = util.sortBy(results, r => {
-    const dirty = (typeof r['name'] === 'string' ? r['name'] : '')
-    const clean = dirty.replaceAll(/[\(\)]+/g)
-
-    return clean
-  })
+  const sorted = util.sortBy(results, r => r['sort'])
 
   return paginate(sorted, criteria)
 })
@@ -222,6 +220,25 @@ database.action('services-map', data => {
 
 
 // helpers
+
+const fold = (str) => {
+  if (str == undefined) {return str}
+
+  return str.toString().trim().toLowerCase().
+    replaceAll(/[äáàâå]/g, 'a').
+    replaceAll(/[öóòôðø]/g, 'o').
+    replaceAll(/[iíìî]/g, 'i').
+    replaceAll(/[ëéèê]/g, 'e').
+    replaceAll(/[üúùû]/g, 'u').
+    replaceAll(/[ÿ]/g, 'y').
+    replaceAll(/[ćč]/g, 'c').
+    replaceAll(/[ł]/g, 'l').
+    replaceAll(/[śš]/g, 's').
+    replaceAll(/[ż]/g, 'z').
+    replaceAll(/æ/g, 'ae').
+    replaceAll(/ß/g, 'ss').
+    replaceAll(/ł/g, 'l')
+}
 
 const sanitizeCriteria = (input) => {
   let criteria = input || {}

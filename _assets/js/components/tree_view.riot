@@ -7,7 +7,6 @@
       label={cap(t('services_allemands'))}
       on-input={props.onInput}
       criteria={props['criteria']}
-      actives={state['actives']}
       depth={depth() + 1}
     ></div>
 
@@ -18,7 +17,6 @@
       label={cap(t('services_francais'))}
       on-input={props.onInput}
       criteria={props['criteria']}
-      actives={state['actives']}
       depth={depth() + 1}
     ></div>
   </template>
@@ -74,6 +72,15 @@
     import search from '../lib/search.instance'
     import config from '../../../_data/config'
 
+    const merge = (array) => {
+      let r = {}
+      for (const a of array) {
+        Object.assign(r, a)
+      }
+
+      return r
+    }
+
     export default class {
       constructor() {
         this.config = config
@@ -81,7 +88,6 @@
 
       onBeforeMount(props, state) {
         state['checked'] = props['defaultChecked'] || false
-        state['actives'] = props['actives'] || {}
 
         this.bus.on('tree-view:any-changed', event => this.onAnyChanged())
       }
@@ -131,10 +137,6 @@
         return this.root.querySelector(':scope > .control > input')
       }
 
-      value() {
-        
-      }
-
       setValue(newValue) {
         this.state['checked'] = newValue
 
@@ -148,16 +150,22 @@
         return childComponents['tree-view'] || []
       }
 
-      onBeforeUpdate() {
+      onBeforeUpdate(props, state) {
         if (!this.input()) return
 
-        this.input().checked = this.state['checked']
+        this.input().checked = state['checked']
       }
 
-      onAnyChanged() {
-        if (!this.input()) return
+      // onUpdated(props, state) {
+      //   if (!this.input()) return
 
-        this.input().indeterminate = this.isIndeterminate()
+      //   this.input().indeterminate = state['indeterminate']
+      // }
+
+      onAnyChanged() {
+      //   if (!this.input()) return
+
+      //   this.update({indeterminate: this.isIndeterminate()})
       }
 
       isIndeterminate() {
@@ -191,6 +199,25 @@
 
           this.update({data})
         })
+      }
+
+      value() {
+        let results = {}
+
+        if (this.isRoot()) {
+          results = {
+            root: true,
+            de: this.children()[0].value(),
+            fr: this.children()[1].value()
+          }
+          return results
+        }
+
+        results = merge(this.children().map(c => c.value()))
+        console.log(results)
+        results['root'] = this.state['checked']
+        
+        return results
       }
     }
   </script>

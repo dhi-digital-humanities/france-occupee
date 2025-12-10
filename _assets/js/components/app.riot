@@ -49,6 +49,7 @@
           const ids = watchlist.unpack()
           p['id'] = ids.map(id => `${id}`).join(',')
         }
+        p['perPage'] = 15
         // console.log(p)
 
         let promises = []
