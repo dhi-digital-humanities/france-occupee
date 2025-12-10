@@ -52,4 +52,8 @@ export default class Service {
   placeName() {
     return this.d['place']['name'] || ''
   }
+
+  imagePath() {
+    return this.d['place']['image_path'] || ''
+  }
 }

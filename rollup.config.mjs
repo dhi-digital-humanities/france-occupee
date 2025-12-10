@@ -11,7 +11,8 @@ dotenv.config()
 const envReplacements = {
   preventAssignment: true,
   'process.env.APP_ENV': JSON.stringify(process.env.APP_ENV),
-  'process.env.ROOT_URL': JSON.stringify(process.env.ROOT_URL)
+  'process.env.ROOT_URL': JSON.stringify(process.env.ROOT_URL),
+  'process.env.IMAGE_PATH': JSON.stringify(process.env.IMAGE_PATH || '')
 };
 
 const APP_ENV = process.env['APP_ENV'] || 'development'
