@@ -57,6 +57,10 @@
     import {Url} from '@wendig/lib'
 
     export default class {
+      onBeforeMount() {
+        window.t = this
+      }
+
       onMounted(props, state) {
         const toggles = this.root.querySelectorAll("[data-toggle='tab']")
         for (const t of toggles) {

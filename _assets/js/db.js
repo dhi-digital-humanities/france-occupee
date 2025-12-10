@@ -243,7 +243,7 @@ database.action('services-map', data => {
     }
 
     return true
-  }).slice(0, 1000)
+  })
 
   criteria['perPage'] = results.length
 

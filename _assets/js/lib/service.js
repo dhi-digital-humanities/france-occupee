@@ -1,3 +1,5 @@
+import config from '../../../_data/config'
+
 export default class Service {
   constructor(data) {
     this.d = data
@@ -53,7 +55,16 @@ export default class Service {
     return this.d['place']['name'] || ''
   }
 
-  imagePath() {
-    return this.d['place']['image_path'] || ''
+  hasImage() {
+    return !!this.d['image']
+  }
+
+  imageUrl() {
+    if (!this.d['place']['image']) return null
+
+    let base = config().image_path
+    if (!base.startsWith('http')) base = `${config().root_url}${base}`
+
+    return `${base}/${this.placeId()}.jpg`
   }
 }

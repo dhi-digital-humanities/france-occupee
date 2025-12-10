@@ -1,5 +1,5 @@
 <place-popup>
-  <div class="service-popup" class:has-image={props.imagePath} data-place-id={props.placeId}>
+  <div class="service-popup" class:has-image={!!props.imageUrl} data-place-id={props.placeId}>
     <div if={props.placeName} class="popup-title">
       {props.placeName}
     </div>
@@ -23,8 +23,8 @@
         </div>
       </div>
       
-      <div if={props.imagePath} class="image-container">
-        <img src={this.imageUrl} alt={props.placeName || 'Place image'} onerror={handleImageError} />
+      <div if={props.imageUrl} class="image-container">
+        <img src={props.imageUrl} alt={props.placeName || 'Place image'} onerror={handleImageError} />
       </div>
     </div>
     
@@ -187,37 +187,6 @@
 
       handleImageError(event) {
         event.target.style.display = 'none'
-      },
-
-      get imageUrl() {
-        const imagePath = this.props.imagePath
-        if (!imagePath) return ''
-        
-        const basePath = config().image_path || '/placeimages' // Mặc định là /placeimages
-        const rootUrl = config().root_url || ''
-        
-        // Nếu basePath đã là URL (http:// hoặc https://), dùng trực tiếp
-        if (basePath.startsWith('http://') || basePath.startsWith('https://')) {
-          return `${basePath}/${imagePath}`
-        }
-        
-        // Nếu basePath là đường dẫn tương đối (bắt đầu bằng /), dùng với root_url
-        if (basePath.startsWith('/')) {
-          return `${rootUrl}${basePath}/${imagePath}`
-        }
-        
-        // Nếu là đường dẫn file system (E:\...), convert sang đường dẫn HTTP
-        if (/^[A-Z]:/i.test(basePath)) {
-          // Convert file system path sang HTTP path
-          // E:\dhip-fo\placeimages -> /placeimages
-          const urlPath = basePath.replace(/\\/g, '/')
-          // Lấy tên thư mục cuối cùng (placeimages)
-          const folderName = urlPath.split('/').pop()
-          return `${rootUrl}/${folderName}/${imagePath}`
-        }
-        
-        // Mặc định: dùng như đường dẫn tương đối
-        return `${rootUrl}/${basePath}/${imagePath}`
       }
     }
   </script>

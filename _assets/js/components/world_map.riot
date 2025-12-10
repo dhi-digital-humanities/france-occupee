@@ -28,9 +28,9 @@
           maxZoom: 18
         }).
           setView([51.505, -0.09], 6);
-        // const url = 'https://build.protomaps.com/20251103.pmtiles'
+        const url = 'https://build.protomaps.com/20251103.pmtiles'
         // const url = '/assets/overview.pmtiles'
-        const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
+        // const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
 
         const layer = protomapsL.leafletLayer({
           flavor: "light",
@@ -197,7 +197,7 @@
                     const city = service.city()
                     const placeId = service.placeId()
                     const placeName = service.placeName()
-                    const imagePath = service.imagePath()
+                    const imageUrl = service.imageUrl()
                     
                     // Tạo element với attribute is để mount component
                     container.innerHTML = `<div is="place-popup"></div>`
@@ -209,7 +209,7 @@
                         placeName: placeName,
                         address: address,
                         city: city,
-                        imagePath: imagePath
+                        imageUrl: imageUrl
                       })
                       
                       // Popup luôn có chiều cao cố định 350px
