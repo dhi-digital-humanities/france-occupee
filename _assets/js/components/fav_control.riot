@@ -17,6 +17,8 @@
 
         watchlist.toggle(this.props['serviceId'])
         this.update()
+
+        this.bus.emit('favs:changed')
       }
     }
   </script>

@@ -1,7 +1,7 @@
 <results>
   <div class="d-flex justify-content-end">
     <ul class="nav nav-tabs">
-      <li class="nav-item">
+      <li class="nav-item {state['results'] == 'map' ? 'active' : ''}">
         <a
           class="nav-link"
           data-toggle="tab"
@@ -9,7 +9,7 @@
           href="#"
         >{cap(t('map_view'))}</a>
       </li>
-      <li class="nav-item active">
+      <li class="nav-item {state['results'] != 'map' ? 'active' : ''}">
         <a
           class="nav-link"
           data-toggle="tab"
@@ -21,13 +21,14 @@
   </div>
 
   <div class="tab-content">
-    <div class="tab-pane fade" id="map-pane">
+    <div class="tab-pane fade in {state['results'] == 'map' ? 'active' : ''}" id="map-pane">
       <div
         is="world-map"
         map-data={props['mapData']}
+        is-active={state['results'] == 'map'}
       ></div>
     </div>
-    <div class="tab-pane fade active in position-relative" id="list-pane">
+    <div class="tab-pane fade in {state['results'] != 'map' ? 'active' : ''} position-relative" id="list-pane">
       <div
         is="sub-form"
         on-input={props['onInput']}
@@ -79,8 +80,24 @@
 
   <script>
     export default class {
-      onUpdated(props) {
-        // console.log(props['data']['results'])
+      onBeforeMount(props, state) {
+        state['results'] = props['criteria']['results']
+      }
+
+      onMounted(props, state) {
+        const toggles = this.root.querySelectorAll("[data-toggle='tab']")
+        for (const t of toggles) {
+          jQuery(t).on('shown.bs.tab', event => {
+            // the map component needs some time to settle before it can work,
+            // to avoid errors, we wait for 100ms
+            window.setTimeout(() => {
+              const target = t.getAttribute('data-target')
+              const results = (target === '#map-pane' ? 'map' : null)
+              
+              props.onInput({results})
+            }, 100)
+          })
+        }
       }
     }
   </script>

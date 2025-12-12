@@ -10,6 +10,7 @@ import App from './components/app.riot'
 import FavControl from './components/fav_control.riot'
 import Icon from './components/icon.riot'
 import Input from './components/input.riot'
+import LoadingIndicator from './components/loading_indicator.riot'
 import MainSearch from './components/main_search.riot'
 import Pagination from './components/pagination.riot'
 import Results from './components/results.riot'
@@ -24,6 +25,7 @@ riot.register('app', App)
 riot.register('fav-control', FavControl)
 riot.register('icon', Icon)
 riot.register('fo-input', Input)
+riot.register('loading-indicator', LoadingIndicator)
 riot.register('main-search', MainSearch)
 riot.register('pagination', Pagination)
 riot.register('results', Results)

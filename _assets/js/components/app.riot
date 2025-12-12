@@ -27,13 +27,16 @@
     import search from '../lib/search.instance'
     import watchlist from '../lib/watchlist'
 
+    let params = null
+
     export default class {
       constructor() {
-        const params = () => {
+        params = (cmp) => {
           const url = Url.current()
           let p = url.hashParams()
           p['page'] = parseInt(p['page'] || 1)
           p['perPage'] = parseInt(p['perPage'] || 10)
+          p['hierarchy'] = this.state['hierarchy']
 
           return p
         }
@@ -44,7 +47,29 @@
         })
       }
 
+      onBeforeMount(props, state) {
+        this.urlSearch.setup()
+
+        this.bus.on('tree-view:value-changed', (event) => {
+          const hierarchy = event.data.value
+          this.state['hierarchy'] = hierarchy
+
+          const url = Url.current()
+          url.updateHashParams({page: null})
+          url.apply(false)
+
+          this.onUrlChanged()
+        })
+
+        this.bus.on('favs:changed', event => {
+          const p = params()
+          if (p['fav']) this.onUrlChanged()
+        })
+      }
+
       onSearch(p) {
+        let promises = []
+
         if (p['fav'] == 'true') {
           const ids = watchlist.unpack()
           p['id'] = ids.map(id => `${id}`).join(',')
@@ -52,9 +77,13 @@
         p['perPage'] = 15
         // console.log(p)
 
-        let promises = []
         promises.push(search.services(p))
-        promises.push(search.servicesMap(p))
+
+        p = structuredClone(p)
+        delete p['page']
+        p['perPage'] = 'max'
+        p['onlyGeo'] = true
+        promises.push(search.services(p))
 
         Promise.all(promises).then(datas => {
           const [data, mapData] = datas
@@ -62,12 +91,6 @@
           this.update({data, mapData})
           this.bus.emit('new-results')
         })
-      }
-
-      onBeforeMount(props, state) {
-        this.urlSearch.setup()
-
-        window.t = this
       }
     }
   </script>

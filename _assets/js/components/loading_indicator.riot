@@ -1,0 +1,20 @@
+<loading-indicator class={isLoading() ? 'active' : false}>
+  <img src="{config().root_url}/assets/images/ajax-loader.gif" />
+
+  <script>
+    import config from '../../../_data/config'
+    import search from '../lib/search.instance'
+
+    export default class {
+      onBeforeMount() {
+        this.config = config
+
+        this.bus.on('search-count-change', () => this.update())
+      }
+
+      isLoading() {
+        return search.count > 0
+      }
+    }
+  </script>
+</loading-indicator>

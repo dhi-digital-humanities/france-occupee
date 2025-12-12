@@ -24,7 +24,7 @@
   <template if={!isRoot()}>
     <div class="control">
       <a
-        if={!state['data'] || state['data']['results'].length > 0}
+        if={!state['data'] || state['data'].length > 0}
         href="#"
         onclick={event => onToggle(event)}
         class="toggle me-1"
@@ -33,7 +33,7 @@
         <img if={isExpanded()} class="tee-plus" src="{config.root_url}/assets/images/minus.gif" />
       </a>
 
-      <div if={state['data'] && state['data']['results'].length === 0} class="input-spacer"></div>
+      <div if={state['data'] && state['data'].length === 0} class="input-spacer"></div>
 
       <input
         type="checkbox"
@@ -48,18 +48,18 @@
 
     <template if={state['data'] && !state['hidden']}>
       <ul class="list-unstyled">
-        <li each={e in Object.entries(state['data']['results'])}>
+        <li each={e in Object.entries(state['data'])}>
           <div
             is="tree-view"
-            parent-id={e[1].id()}
+            parent-id={e[1].ids}
             country={props['country']}
-            label={e[1].name()}
+            label={e[1].label}
             on-input={props.onInput}
             criteria={props['criteria']}
             margin={true}
             depth={depth() + 1}
             is-first={e[0] === 0}
-            is-last={e[0] === (state['data']['results'].length - 1)}
+            is-last={e[0] === (state['data'].length - 1)}
             default-checked={state['checked']}
           ></div>
         </li>
@@ -89,7 +89,9 @@
       onBeforeMount(props, state) {
         state['checked'] = props['defaultChecked'] || false
 
-        this.bus.on('tree-view:any-changed', event => this.onAnyChanged())
+        if (this.isRoot()) {
+          this.bus.on('tree-view:any-changed', event => this.onValueChanged())
+        }
       }
 
       isRoot() {
@@ -121,15 +123,13 @@
         } else {
           this.fetch()
         }
-
-        console.log('parent', this.parent)
       }
 
       onChange(event) {
         const newState = this.input().checked
 
         this.setValue(newState)
-        this.bus.emit('tree-view:any-changed')
+        this.bus.emit('tree-view:any-changed', {value: this.value()})
         this.update()
       }
 
@@ -156,67 +156,50 @@
         this.input().checked = state['checked']
       }
 
-      // onUpdated(props, state) {
-      //   if (!this.input()) return
-
-      //   this.input().indeterminate = state['indeterminate']
-      // }
-
-      onAnyChanged() {
-      //   if (!this.input()) return
-
-      //   this.update({indeterminate: this.isIndeterminate()})
-      }
-
-      isIndeterminate() {
-        if (!this.state['data']) return false
-        if (this.children().length === 0) return false
-
-        let tracker = null
-        for (const c of this.children()) {
-          if (c.isIndeterminate()) return true
-
-          if (tracker === null) {
-            tracker = c.state['checked']
-            continue
-          }
-
-          if (tracker !== c.state['checked']) return true
-        }
-
-        return false
+      onValueChanged() {
+        const value = this.value()
+        this.bus.emit('tree-view:value-changed', {value})
       }
 
       fetch() {
         const params = {
           parentId: this.parentId(),
           country: this.props['country'],
+          onlyParents: true,
           perPage: 'max'
         }
 
         search.services(params).then(data => {
-          // console.log(data)
+          const groups = util.groupBy(data['results'], r => r.name())
 
-          this.update({data})
+          let combined = []
+          for (const [k, gs] of Object.entries(groups)) {
+            const ids = gs.map(g => g.id())
+            combined.push({
+              label: k,
+              ids
+            })
+          }
+
+          this.update({data: combined})
         })
       }
 
-      value() {
-        let results = {}
+      value(results = {}) {
+        const sv = this.state['checked']
 
-        if (this.isRoot()) {
-          results = {
-            root: true,
-            de: this.children()[0].value(),
-            fr: this.children()[1].value()
+        if (this.parentId() === -1) {
+          if (this.props['country']) {
+            results[this.props['country']] = sv
           }
-          return results
+        } else {
+          results[this.parentId()] = sv
         }
 
-        results = merge(this.children().map(c => c.value()))
-        console.log(results)
-        results['root'] = this.state['checked']
-        
+        for (const child of this.children()) {
+          child.value(results)
+        }
+
         return results
       }
     }

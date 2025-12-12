@@ -82,6 +82,22 @@ const setup = async () => {
     const place_id = service['place_id']
     service['place'] = storage['places'][place_id]
 
+    // cleanup
+    delete service['d_breadcrumb']
+    delete service['last_editor_basic_user_id']
+    delete service['filemaker_ids']
+    delete service['fts']
+
+    // sort
+    service['sort'] = fold(service['name']) //.replaceAll(/ /g, '')
+    let fts_data = [service['name']]
+    if (service['place']) {
+      fts_data.push(service['place']['name'])
+      fts_data.push(service['place']['current_city'])
+      fts_data.push(service['place']['current_street'])
+    }
+    service['fts'] = fold(fts_data.join(' '))
+
     // build hierarchy
     const parent_id = service['parent_service_id']
     if (!parent_id) {
@@ -95,9 +111,6 @@ const setup = async () => {
     const parent = storage['services'][parent_id]
     parent['child_ids'] = parent['child_ids'] || []
     parent['child_ids'].push(service['id'])
-
-    // sort
-    service['sort'] = fold(service['name']).replaceAll(/ /g, '')
   }
 
   database.loaded()
@@ -110,12 +123,12 @@ const matchesTerms = (target, actual) => {
   if (!target) return true
   if (!actual) return false
 
-  const r = new RegExp(fold(target), 'i')
+  const r = new RegExp(target, 'i')
   const actuals = (Array.isArray(actual) ? actual : [actual])
 
   for (const a of actuals) {
     if (!a) continue
-    if (fold(a).match(r)) return true
+    if (a.match(r)) return true
   }
 
   return false
@@ -130,8 +143,9 @@ const matchesIds = (target, actual) => {
 const matchesParentId = (target, actual) => {
   if (!target) return true
   if (target === -1) return !actual
-  
-  return target === actual
+  if (!Array.isArray(target)) target = [target]
+
+  return target.indexOf(actual) != -1
 }
 
 const matchesExactly = (target, actual) => {
@@ -146,6 +160,40 @@ const matchesYears = (years, record) => {
   if (!actual) return false
 
   return years.indexOf(actual) != -1
+}
+
+// const getAncestorChainFor = (record) => {
+//   console.log()
+// }
+
+const matchesHierarchy = (hierarchy, record) => {
+  if (!hierarchy) return true
+
+  let tracker = []
+  let r = record
+  while (!!r) {
+    if (r['id'] in hierarchy) {
+      const v = hierarchy[r['id']]
+
+      // for (const t of tracker) hierarchy[t] = v
+
+      return v
+    }
+
+    tracker.push(r['parent_id'])
+    r = storage['services'][r['parent_id']]
+  }
+
+  const country = record['source']['country']
+  return hierarchy[country]
+}
+
+const hasGeo = (record) => {
+  if (!record['place']) return false
+  if (!record['place']['latitude']) return false
+  if (!record['place']['longitude']) return false
+
+  return true
 }
 
 const dig = (obj, chain = []) => {
@@ -163,12 +211,18 @@ database.action('services', data => {
   const criteria = sanitizeCriteria(data.criteria)
 
   const results = Object.values(storage['services']).filter(record => {
-    if (record['name'] === true) return false // TODO: fix data
     if (record['status'] === 'deleted') return false // TODO: fix data
 
     if (criteria['fav']) {
       if (!matchesIds(criteria['id'], record['id'])) return false
     }
+
+    const isParent = ((record['child_ids'] || []).length > 0)
+    if (criteria['onlyParents'] && !isParent) return false
+
+    if (!matchesHierarchy(criteria['hierarchy'], record)) return false
+
+    if (criteria['onlyGeo'] && !hasGeo(record)) return false
 
     const name = record['name']
     if (!matchesTerms(criteria['name'], name)) return false
@@ -189,7 +243,8 @@ database.action('services', data => {
     if (!matchesExactly(criteria['country'], country)) return false
 
     if (!criteria['fav']) {
-      if (!matchesTerms(criteria['terms'], [name, city, address])) return false
+      const fts = record['fts']
+      if (!matchesTerms(criteria['terms'], fts)) return false
       if (!matchesYears(criteria['years'], record)) return false
     }
 
@@ -199,55 +254,6 @@ database.action('services', data => {
   const sorted = util.sortBy(results, r => r['sort'])
 
   return paginate(sorted, criteria)
-})
-
-
-database.action('services-map', data => {
-  const criteria = sanitizeCriteria(data.criteria)
-
-  const results = Object.values(storage['services']).filter(record => {
-    if (record['name'] === true) return false // TODO: fix data
-
-    // Đảm bảo place được join đúng qua place_id
-    if (!record['place_id']) return false
-    if (!record['place']) return false
-    if (!record['place']['latitude']) return false
-    if (!record['place']['longitude']) return false
-
-    // Áp dụng các filter criteria tương tự như services action
-    if (criteria['fav']) {
-      if (!matchesIds(criteria['id'], record['id'])) return false
-    }
-
-    const name = record['name']
-    if (!matchesTerms(criteria['name'], name)) return false
-
-    const city = dig(record, ['place', 'current_city'])
-    if (!matchesTerms(criteria['city'], city)) return false
-
-    const address = dig(record, ['place', 'current_street'])
-    if (!matchesTerms(criteria['address'], address)) return false
-
-    const organization = record['hierarchy']
-    if (!matchesTerms(criteria['organization'], organization)) return false
-
-    const parentId = record['parent_id']
-    if (!matchesParentId(criteria['parentId'], parentId)) return false
-
-    const country = dig(record, ['source', 'country'])
-    if (!matchesExactly(criteria['country'], country)) return false
-
-    if (!criteria['fav']) {
-      if (!matchesTerms(criteria['terms'], [name, city, address])) return false
-      if (!matchesYears(criteria['years'], record)) return false
-    }
-
-    return true
-  })
-
-  criteria['perPage'] = results.length
-
-  return paginate(results, criteria)
 })
 
 database.action('services-by-place', data => {
@@ -311,6 +317,20 @@ const sanitizeCriteria = (input) => {
     parseInt(criteria['parentId'] || -1) :
     null
   )
+  if (criteria['hierarchy']) {
+    const values = Object.values(criteria['hierarchy'])
+
+    const allFalse = values.every(v => !v)
+    if (allFalse) delete criteria['hierarchy']
+
+    const allTrue = values.every(v => v)
+    if (allTrue) delete criteria['hierarchy']
+  }
+
+  const toFold = ['name', 'city', 'address', 'organization', 'terms']
+  for (const f of toFold) {
+    if (f in criteria) criteria[f] = fold(criteria[f])
+  }
 
   return criteria
 }

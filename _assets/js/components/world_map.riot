@@ -1,14 +1,25 @@
 <world-map>
   <div class="map"></div>
 
+  <a
+    href="#"
+    onclick={event => onFullScreen(event)}
+    class="full-screen-button"
+  ><img src="{config().root_url}/assets/images/maximize.svg"></a>
+
   <script>
     import * as L from 'leaflet'
     import * as protomapsL from 'protomaps-leaflet'
     import 'leaflet.markercluster'
     import * as riot from 'riot'
     import config from '../../../_data/config'
+    import cache from '../lib/cache.instance'
 
     export default class {
+      constructor() {
+        this.config = config
+      }
+
       onMounted(props, state) {
         this.buildMap()
 
@@ -47,8 +58,24 @@
         })
         markers.addTo(map)
 
+        map.on('popupopen', event => this.onPopup(event))
+
         this.state['map'] = map
         this.state['markers'] = markers
+      }
+
+      onFullScreen(event) {
+        event.preventDefault()
+
+        if (this.state['fullScreen']) {
+          document.exitFullscreen().then(() => {
+            this.update({fullScreen: false})
+          })
+        } else {
+          this.root.requestFullscreen().then(() => {
+            this.update({fullScreen: true})
+          })
+        }
       }
 
       getIconForCountry(country) {
@@ -113,27 +140,18 @@
         }
 
         // Tạo div chứa icon và số lượng
-        const div = L.DomUtil.create('div', 'custom-cluster-icon')
-        div.innerHTML = `
-          <div style="position: relative; width: 40px; height: 40px;">
-            <img src="${iconUrl}" style="width: 40px; height: 40px; object-fit: contain;" />
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              color: white;
-              font-weight: bold;
-              font-size: 14px;
-              text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-              pointer-events: none;
-            ">${count}</div>
+        const html = `
+          <div class="fo-cluster-icon">
+            <div>
+              <img src="${iconUrl}" />
+              <div>${count}</div>
+            </div>
           </div>
         `
         
         return L.divIcon({
-          html: div.innerHTML,
-          className: 'custom-cluster-div-icon',
+          html: html,
+          className: 'fo-cluster-div-icon',
           iconSize: L.point(40, 40)
         })
       }
@@ -152,15 +170,23 @@
       }
 
       onUpdated(props, state) {
-        const data = props['mapData']
+        this.refresh()
+      }
+
+      refresh() {
+        if (!this.root.checkVisibility()) return
+
+        const data = this.props['mapData']
         // console.log(data)
         // Thuy: here, `props['mapData]` has the data
         // console.log(props['mapsData'])
         // for example:
 
-        const markers = state['markers']
+        const markers = this.state['markers']
 
         markers.clearLayers()
+
+        let bulk = []
         for (const service of data['results']) {
           const country = service.country()
           const icon = this.getIconForCountry(country)
@@ -179,76 +205,89 @@
             minWidth: 600,
             className: 'service-popup-container'
           })
-          
-          // Mount Riot component khi popup được mở
-          marker.on('popupopen', () => {
-            const popup = marker.getPopup()
-            if (!popup) return
+
+          bulk.push(marker)
+        }
+
+        markers.addLayers(bulk, {chunkedLoading: true})
+
+        let bounds = markers.getBounds()
+        if (!bounds['_northEast']) {
+          bounds = [
+            [40.04443758460859, -20.608574060749856],
+            [56.559482483762245, 32.345527501750155]
+          ]
+        }
+
+        this.state['map'].flyToBounds(bounds, {duration: 1.0, easeLinearity: 1.0})
+      }
+
+      onPopup(event) {
+        const marker = event.popup._source
+        const popup = event.popup
+
+        if (!popup) return
             
-            const element = popup.getElement()
-            if (element) {
-              const container = element.querySelector('div[style*="min-width: 600px"]')
-              if (container && container._service && !container._popupMounted) {
-                // Đợi một chút để đảm bảo DOM đã sẵn sàng
-                setTimeout(() => {
-                  try {
-                    const service = container._service
-                    const address = service.address()
-                    const city = service.city()
-                    const placeId = service.placeId()
-                    const placeName = service.placeName()
-                    const imageUrl = service.imageUrl()
-                    
-                    // Tạo element với attribute is để mount component
-                    container.innerHTML = `<div is="place-popup"></div>`
-                    const popupElement = container.querySelector('[is="place-popup"]')
-                    
-                    if (popupElement) {
-                      const mounted = riot.mount(popupElement, {
-                        placeId: placeId,
-                        placeName: placeName,
-                        address: address,
-                        city: city,
-                        imageUrl: imageUrl
-                      })
-                      
-                      // Popup luôn có chiều cao cố định 350px
-                      if (mounted && mounted.length > 0) {
-                        const popupWrapper = element.closest('.leaflet-popup-content-wrapper')
-                        const popupContent = element.closest('.leaflet-popup-content')
-                        if (popupWrapper) {
-                          popupWrapper.style.height = '350px'
-                          popupWrapper.style.maxHeight = '350px'
-                        }
-                        if (popupContent) {
-                          popupContent.style.height = '350px'
-                          popupContent.style.maxHeight = '350px'
-                        }
-                        // Cập nhật lại kích thước popup nếu có method
-                        if (popup && typeof popup.invalidateSize === 'function') {
-                          popup.invalidateSize()
-                        }
-                      }
-                      
-                      if (mounted && mounted.length > 0) {
-                        container._popupMounted = true
-                      } else {
-                        throw new Error('Failed to mount place-popup component')
-                      }
-                    } else {
-                      throw new Error('Could not find place-popup element')
+        const element = popup.getElement()
+        if (element) {
+          const container = element.querySelector('div[style*="min-width: 600px"]')
+          if (container && container._service && !container._popupMounted) {
+            // Đợi một chút để đảm bảo DOM đã sẵn sàng
+            setTimeout(() => {
+              try {
+                const service = container._service
+                const address = service.address()
+                const city = service.city()
+                const placeId = service.placeId()
+                const placeName = service.placeName()
+                const imageUrl = service.imageUrl()
+                
+                // Tạo element với attribute is để mount component
+                container.innerHTML = `<div is="place-popup"></div>`
+                const popupElement = container.querySelector('[is="place-popup"]')
+                
+                if (popupElement) {
+                  const mounted = riot.mount(popupElement, {
+                    placeId: placeId,
+                    placeName: placeName,
+                    address: address,
+                    city: city,
+                    imageUrl: imageUrl
+                  })
+                  
+                  // Popup luôn có chiều cao cố định 350px
+                  if (mounted && mounted.length > 0) {
+                    const popupWrapper = element.closest('.leaflet-popup-content-wrapper')
+                    const popupContent = element.closest('.leaflet-popup-content')
+                    if (popupWrapper) {
+                      popupWrapper.style.height = '350px'
+                      popupWrapper.style.maxHeight = '350px'
                     }
-                  } catch (error) {
-                    console.error('Error mounting place-popup:', error)
-                    console.error('Error details:', error.stack)
-                    container.innerHTML = `<div style="padding: 20px; color: red;">Erreur lors du chargement: ${error.message}</div>`
+                    if (popupContent) {
+                      popupContent.style.height = '350px'
+                      popupContent.style.maxHeight = '350px'
+                    }
+                    // Cập nhật lại kích thước popup nếu có method
+                    if (popup && typeof popup.invalidateSize === 'function') {
+                      popup.invalidateSize()
+                    }
                   }
-                }, 50)
+                  
+                  if (mounted && mounted.length > 0) {
+                    container._popupMounted = true
+                  } else {
+                    throw new Error('Failed to mount place-popup component')
+                  }
+                } else {
+                  throw new Error('Could not find place-popup element')
+                }
+              } catch (error) {
+                console.error('Error mounting place-popup:', error)
+                console.error('Error details:', error.stack)
+                container.innerHTML = `<div style="padding: 20px; color: red;">Erreur lors du chargement: ${error.message}</div>`
               }
-            }
-          })
-          
-          markers.addLayer(marker)
+            }, 50)
+          }
         }
       }
     }
