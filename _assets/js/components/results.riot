@@ -34,6 +34,7 @@
         is="world-map"
         map-data={props['mapData']}
         is-active={state['results'] == 'map'}
+        criteria={props['criteria']}
       ></div>
     </div>
     <div class="tab-pane fade in {state['results'] != 'map' ? 'active' : ''} position-relative" id="list-pane">

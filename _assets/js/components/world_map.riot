@@ -12,14 +12,9 @@
     import * as protomapsL from 'protomaps-leaflet'
     import 'leaflet.markercluster'
     import * as riot from 'riot'
-    import config from '../../../_data/config'
     import cache from '../lib/cache.instance'
 
     export default class {
-      constructor() {
-        this.config = config
-      }
-
       onMounted(props, state) {
         this.buildMap()
 
@@ -39,15 +34,23 @@
           maxZoom: 18
         }).
           setView([51.505, -0.09], 6);
-        const url = 'https://build.protomaps.com/20251103.pmtiles'
+        // const url = 'https://build.protomaps.com/20251103.pmtiles'
         // const url = '/assets/overview.pmtiles'
-        // const url = 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
+        // xyz layer
+        const layer = L.tileLayer(
+          'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+          {
+            maxZoom: 18
+          }
+        )
 
-        const layer = protomapsL.leafletLayer({
-          flavor: "light",
-          lang: "en",
-          url
-        })
+        // protomaps layer
+        // const layer = protomapsL.leafletLayer({
+        //   flavor: "light",
+        //   lang: "en",
+        //   url: 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
+        // })
+
         layer.addTo(map)
 
         const markers = L.markerClusterGroup({
@@ -79,7 +82,7 @@
       }
 
       getIconForCountry(country) {
-        const rootUrl = config().root_url || ''
+        const rootUrl = this.config().root_url || ''
         let iconUrl = `${rootUrl}/assets/images/marker-icon.png`
         
         if (country === 'fr') {
@@ -97,7 +100,7 @@
       }
 
       createClusterIcon(cluster) {
-        const rootUrl = config().root_url || ''
+        const rootUrl = this.config().root_url || ''
         const markers = cluster.getAllChildMarkers()
         
         // Đếm số lượng theo từng loại country

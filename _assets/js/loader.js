@@ -16,4 +16,4 @@ const setup = () => {
   document.querySelector('body').append(script)
 }
 
-// setup()
+setup()

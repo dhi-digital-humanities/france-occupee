@@ -27,6 +27,28 @@
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
-        "site_subtitle": "Die deutschen und französischen Dienststellen"
+        "site_subtitle": "Die deutschen und französischen Dienststellen",
+        "search": "Suche",
+        "favorites": "Favoriten",
+        "full_text_prompt": "geben Sie eine Dienststelle oder Adresse an",
+        "year_prompt": "Auswahl nach Jahr",
+        "verbs.search": "suchen",
+        "city": "Stadt",
+        "date": "Datum",
+        "name": "Name",
+        "address": "Adresse",
+        "organization": "Organisation",
+        "action": "Aktion",
+        "map_view": "Kartenansicht",
+        "list_view": "Listenansicht",
+        "create_link": "Link für diese Ergebnisliste speichern",
+        "export_csv": "als CSV-Datei exportieren",
+        "services_allemands": "deutsche Dienststellen",
+        "services_francais": "französische Dienststellen",
+        "uncheck_all": "alles deaktivieren",
+        "translation": "Übersetzung",
+        "pending": "zu prüfen",
+        "filter_results": "Suchergebnisse filtern",
+        "filter_help": "Die Hierarchie unten zeigt alle auf der Karte vorhandenen Dienststellen"
     }
 }

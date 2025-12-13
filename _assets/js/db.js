@@ -171,7 +171,7 @@ const matchesHierarchy = (hierarchy, record) => {
     if (r['id'] in hierarchy) {
       const v = hierarchy[r['id']]
 
-      // for (const t of tracker) hierarchy[t] = v
+      for (const t of tracker) hierarchy[t] = v
 
       return v
     }

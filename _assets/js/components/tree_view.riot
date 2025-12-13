@@ -29,8 +29,8 @@
         onclick={event => onToggle(event)}
         class="toggle me-1"
       >
-        <img if={!isExpanded()} class="tee-plus" src="{config.root_url}/assets/images/plus.gif" />
-        <img if={isExpanded()} class="tee-plus" src="{config.root_url}/assets/images/minus.gif" />
+        <img if={!isExpanded()} class="tee-plus" src="{config().root_url}/assets/images/plus.gif" />
+        <img if={isExpanded()} class="tee-plus" src="{config().root_url}/assets/images/minus.gif" />
       </a>
 
       <div if={state['data'] && state['data'].length === 0} class="input-spacer"></div>
@@ -70,7 +70,6 @@
   <script>
     import {util} from '@wendig/lib'
     import search from '../lib/search.instance'
-    import config from '../../../_data/config'
 
     const merge = (array) => {
       let r = {}
@@ -82,10 +81,6 @@
     }
 
     export default class {
-      constructor() {
-        this.config = config
-      }
-
       onBeforeMount(props, state) {
         state['checked'] = props['defaultChecked'] || false
 
@@ -193,7 +188,9 @@
             results[this.props['country']] = sv
           }
         } else {
-          results[this.parentId()] = sv
+          for (const pi of this.parentId()) {
+            results[pi] = sv
+          }
         }
 
         for (const child of this.children()) {
