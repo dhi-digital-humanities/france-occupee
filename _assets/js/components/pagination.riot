@@ -5,16 +5,14 @@
       href="#"
       class="first text-decoration-none dfk-sans-serif {show(!isFirst())}"
     >
-      <svg is="icon" bootstrap-id="chevron-double-left"></svg>
-      <span class="text">{props.firstLabel || 'first page'}</span>
+      <img src="{config().root_url}/assets/images/pagination/02.png" />
     </a>
     <a
       onclick={event => pageTo(this.props.page - 1, event)}
       href="#"
       class="previous text-decoration-none dfk-sans-serif {show(!isFirst())}"
     >
-      <svg is="icon" bootstrap-id="chevron-left"></svg>
-      <span class="text">{props.previousLabel || 'previous page'}</span>
+      <img src="{config().root_url}/assets/images/pagination/03.png" />
     </a>
     <div class="indicator">{this.props.page}/{totalPages()}</div>
     <a
@@ -22,20 +20,19 @@
       href="#"
       class="next text-decoration-none dfk-sans-serif {show(!isLast())}"
     >
-      <span class="text">{props.nextLabel || 'next page'}</span>
-      <svg is="icon" bootstrap-id="chevron-right"></svg>
+      <img src="{config().root_url}/assets/images/pagination/04.png" />
     </a>
     <a
       onclick={event => pageTo(totalPages(), event)}
       href="#"
       class="last text-decoration-none dfk-sans-serif {show(!isLast())}"
     >
-      <span class="text">{props.lastLabel || 'last page'}</span>
-      <svg is="icon" bootstrap-id="chevron-double-right"></svg>
+      <img src="{config().root_url}/assets/images/pagination/05.png" />
     </a>
   </template>
 
   <script>
+    import config from '../../../_data/config'
     import Icon from './icon.riot'
 
     export default class {
@@ -44,6 +41,8 @@
       }
 
       constructor() {
+        this.config = config
+
         this.previous = this.previous.bind(this)
         this.next = this.next.bind(this)
       }

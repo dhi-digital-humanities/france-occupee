@@ -21,7 +21,9 @@
         "services_francais": "services français",
         "uncheck_all": "tout déselectionner",
         "translation": "traduction",
-        "pending": "à vérifier"
+        "pending": "à vérifier",
+        "filter_results": "filtrer les résultats",
+        "filter_help": "la hiérarchie ci-dessous affiche l'ensemble des services présents sur la carte"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",

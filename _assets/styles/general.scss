@@ -1,127 +1,249 @@
-.position-relative {
-  position: relative !important;
+@use 'variables' as fo;
+
+
+// general
+
+@font-face {
+  font-family: ayumi;
+  src: url('');
 }
 
-// body styles
 
-[is='world-map'] {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: calc(100vh - 190px);
+// app styles
 
-  .full-screen-button {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    z-index: 1000;
+[app-id='fo'] {
+  font-family: ayumi;
+  font-size: 14px;
+
+  .btn-group {
+    .btn {
+      border: 1px solid;
+      padding: 3px;
+
+      &.btn-primary {
+        color: fo.$dark-gray;
+        border-color: fo.$light-gray;
+        background-color: fo.$light-gray;
+
+        &.active {
+          border-color: fo.$orange;
+          background-color: rgba(0, 0, 0, 0);
+          box-shadow: none;
+        }
+      }
+
+    }
   }
 
-  .map {
+  .btn {
+    img {
+      margin-top: -3px;
+      margin-right: 5px;
+    }
+  }
+  
+  input {
+    border-radius: 0;
+    height: 25px;
+    padding-left: 5px;
+  }
+
+  .nav-tabs {
+    .nav-link {
+      padding: 5px 15px;
+      border-radius: 0;
+      margin-right: 10px;
+      color: fo.$dark-gray;
+      text-transform: uppercase;
+
+      background-color: fo.$light-gray;
+
+      img {
+        margin-top: -3px;
+        margin-right: 7px;
+
+        &.active {
+          display: none;
+        }
+
+        &.inactive {
+          display: inline-block;
+        }
+      }
+    }
+
+    li.active {
+      .nav-link {
+        background-color: rgba(0, 0, 0, 0);
+        border-bottom-color: white;
+
+        img.active {
+          display: inline-block;
+        }
+        img.inactive {
+          display: none;
+        }
+      }
+    }
+
+    li:last-child {
+      .nav-link {
+        margin-right: 0;
+      }
+    }
+  }
+
+  .btn {
+    border-radius: 0;
+  }
+
+  .form-label {
+    font-weight: normal;
+  }
+
+  a:focus {
+    outline: none;
+  }
+
+  [is='help-icon'] {
+    cursor: pointer;
+  }
+
+  [is='world-map'] {
+    position: relative;
+    display: block;
     width: 100%;
-    height: 100%;
-  }
+    height: calc(100vh - 190px);
 
-  .fo-cluster-icon {
-    & > div {
-      position: relative;
-      width: 40px;
-      height: 40px;
+    .full-screen-button {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 1000;
+    }
 
-      & > img {
+    .map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .fo-cluster-icon {
+      & > div {
+        position: relative;
         width: 40px;
         height: 40px;
-        object-fit: contain;
+
+        & > img {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+        }
+
+        & > div {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+          pointer-events: none;
+        }
+      }
+    }
+  }
+
+  [is='icon'] {
+    width: 1em;
+    height: 1em;
+  }
+
+  table {
+    th.text-column {
+      width: 300px;
+    }
+  }
+
+  [is='main-search'] {
+    padding-bottom: 30px;
+  }
+
+  [is='pagination'] {
+    // position: fixed;
+    // bottom: 0;
+    // right: 0;
+    // left: 0;
+
+    & > * {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+  }
+
+  [is='tree-view'] {
+    border: 1px solid fo.$light-gray;
+
+    [is='tree-view'] {
+      border-width: 0;
+    }
+
+    .control {
+      display: flex;
+      align-items: top;
+
+      a.toggle {
+        display: inline-block;
+        width: 18px;
+        height: 24px;
       }
 
-      & > div {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-weight: bold;
-        font-size: 14px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        pointer-events: none;
+      input[type='checkbox'] {
+        display: inline-block;
+        margin: 0;
+        margin-top: 5px;
+        margin-right: 5px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .input-spacer {
+        min-width: 14px;
+        height: 24px;
+        margin-right: 6px;
+      }
+
+      .name {
+        position: relative;
+        top: 3px;
       }
     }
-  }
-}
 
-[is='icon'] {
-  width: 1em;
-  height: 1em;
-}
-
-table {
-  th.text-column {
-    width: 300px;
-  }
-}
-
-[is='main-search'] {
-  padding-bottom: 30px;
-}
-
-[is='pagination'] {
-  // position: fixed;
-  // bottom: 0;
-  // right: 0;
-  // left: 0;
-
-  & > * {
-    margin-left: 10px;
-    margin-right: 10px;
-  }
-}
-
-[is='tree-view'] {
-  .control {
-    display: flex;
-    align-items: top;
-
-    a.toggle {
-      display: inline-block;
-      width: 18px;
-      height: 24px;
-    }
-
-    input[type='checkbox'] {
-      display: inline-block;
-      margin: 0;
-      margin-top: 5px;
-      margin-right: 5px;
-      width: 14px;
-      height: 14px;
-    }
-
-    .input-spacer {
-      min-width: 14px;
-      height: 24px;
-      margin-right: 6px;
-    }
-
-    .name {
-      position: relative;
-      top: 3px;
+    &.with-margin {
+      margin-left: 18px;
     }
   }
 
-  &.with-margin {
-    margin-left: 18px;
+  [is='loading-indicator'] {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+
+    &.active {
+      opacity: 1;
+    }
   }
-}
 
-[is='loading-indicator'] {
-  position: absolute;
-  top: 10px;
-  right: 15px;
+  [is='sub-form'] {
+    label {
+      width: 150px;
+    }
 
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-
-  &.active {
-    opacity: 1;
+    input {
+      width: 300px;
+    }
   }
 }

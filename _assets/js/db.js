@@ -162,10 +162,6 @@ const matchesYears = (years, record) => {
   return years.indexOf(actual) != -1
 }
 
-// const getAncestorChainFor = (record) => {
-//   console.log()
-// }
-
 const matchesHierarchy = (hierarchy, record) => {
   if (!hierarchy) return true
 

@@ -17,7 +17,7 @@
           data-toggle="tab"
           data-target="#favorites-pane"
           href="#"
-        >{cap(t('favorites'))}</a>
+        >{cap(t('favorites'))} ({favCount()})</a>
       </li>
     </ul>
 
@@ -32,11 +32,18 @@
           value={props['criteria']['terms']}
         ></div>
 
+        <div class="mb-2 mt-5">{cap(t('year_prompt'))}</div>
+
         <div
           is="year-selector"
           on-input={props.onInput}
           criteria={props['criteria']}
         }></div>
+
+        <div class="mt-5">
+          {cap(t('filter_results'))}
+          <img is="help-icon" text={cap(t('filter_help'))} />
+        </div>
 
         <div
           is="tree-view"
@@ -46,8 +53,14 @@
       </div>
       
       <div class="tab-pane fade {!isFav() ? '' : 'active in'}" id="favorites-pane">
-        <button class="btn btn-warning d-block mt-3 w-100">{cap(t('export_csv'))}</button>
-        <button class="btn btn-primary d-block mt-3 w-100">{cap(t('create_link'))}</button>
+        <button class="btn btn-warning d-block mt-3 w-100">
+          <img src="{config().root_url}/assets/images/csv.png" />
+          {cap(t('export_csv'))}
+        </button>
+        <button class="btn btn-primary d-block mt-3 w-100">
+          <img src="{config().root_url}/assets/images/check.png" />
+          {cap(t('create_link'))}
+        </button>
       </div>
     </div>
 
@@ -55,14 +68,10 @@
   </form>
 
   <script>
-    // import {* as bs} from 'bootstrap'
     import {Url} from '@wendig/lib'
+    import watchlist from '../lib/watchlist'
 
     export default class {
-      onBeforeMount() {
-        window.t = this
-      }
-
       onMounted(props, state) {
         const toggles = this.root.querySelectorAll("[data-toggle='tab']")
         for (const t of toggles) {
@@ -77,6 +86,10 @@
 
       isFav() {
         return this.props['criteria']['fav'] === 'true'
+      }
+
+      favCount() {
+        return watchlist.count()
       }
     }
   </script>

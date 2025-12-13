@@ -4,10 +4,12 @@ import {i18n, RiotPlugins, BusRiotPlugin} from '@wendig/lib'
 
 import config from '../../_data/config'
 import {detectLocale} from './lib/util'
+import FontLoader from './lib/font_loader'
 
 // import the component
 import App from './components/app.riot'
 import FavControl from './components/fav_control.riot'
+import HelpIcon from './components/help_icon.riot'
 import Icon from './components/icon.riot'
 import Input from './components/input.riot'
 import LoadingIndicator from './components/loading_indicator.riot'
@@ -23,6 +25,7 @@ import PlacePopup from './components/place_popup.riot'
 // register the component
 riot.register('app', App)
 riot.register('fav-control', FavControl)
+riot.register('help-icon', HelpIcon)
 riot.register('icon', Icon)
 riot.register('fo-input', Input)
 riot.register('loading-indicator', LoadingIndicator)
@@ -35,6 +38,8 @@ riot.register('world-map', WorldMap)
 riot.register('year-selector', YearSelector)
 riot.register('place-popup', PlacePopup)
 
+FontLoader.setup()
+
 console.log('fetching translations')
 
 // set up translations then mount all registered components
@@ -42,6 +47,10 @@ i18n.fetch(`${config().root_url}/data/translations.json`).then((data) => {
   console.log('translations loaded')
 
   RiotPlugins.setup(riot)
+  riot.install(cmp => {
+    cmp.config = config
+    return cmp
+  })
   riot.install(RiotPlugins.i18n)
   riot.install(RiotPlugins.parent)
   riot.install(RiotPlugins.setTitle)
