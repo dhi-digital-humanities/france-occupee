@@ -14,7 +14,7 @@
     >
       <img src="{config().root_url}/assets/images/pagination/03.png" />
     </a>
-    <div class="indicator">{this.props.page}/{totalPages()}</div>
+    <div class="indicator">{pageFromTo()}</div>
     <a
       onclick={event => pageTo(this.props.page + 1, event)}
       href="#"
@@ -29,6 +29,8 @@
     >
       <img src="{config().root_url}/assets/images/pagination/05.png" />
     </a>
+
+    <div class="indicator">{xToYofT()}</div>
   </template>
 
   <script>
@@ -88,6 +90,25 @@
 
       totalPages() {
         return Math.ceil(this.props.total / this.props.perPage)
+      }
+
+      pageFromTo() {
+        const result = this.t('page_from_to', {
+          f: this.props.page,
+          t: this.totalPages()
+        })
+
+        return this.cap(result)
+      }
+
+      xToYofT() {
+        const result = this.t('results_x_to_y_of_t', {
+          x: (this.props.page - 1) * this.props.perPage + 1,
+          y: this.props.page * this.props.perPage,
+          t: this.props.total
+        })
+
+        return this.cap(result)
       }
 
       show(value) {

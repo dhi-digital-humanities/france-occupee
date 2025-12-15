@@ -45,6 +45,14 @@
       ></div>
 
       <template if={props['data']}>
+        <div
+          is="pagination"
+          page={props['data']['page']}
+          per-page={props['data']['perPage']}
+          total={props['data']['total']}
+          page-to={props.onInput}
+        ></div>
+
         <table class="table table-striped table-condensed">
           <thead>
             <tr>
