@@ -57,6 +57,7 @@ i18n.fetch(`${config().root_url}/data/translations.json`).then((data) => {
   riot.install(BusRiotPlugin)
 
   i18n.setLocale(detectLocale())
+  // i18n.setLocale('de')
 
   riot.mount('[is]')
 })

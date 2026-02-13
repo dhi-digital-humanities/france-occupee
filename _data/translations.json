@@ -25,7 +25,8 @@
         "filter_results": "filtrer les résultats",
         "filter_help": "la hiérarchie ci-dessous affiche l'ensemble des services présents sur la carte",
         "page_from_to": "page %{f} sur %{t}",
-        "results_x_to_y_of_t": "lignes %{x} à %{y} sur %{t}"
+        "results_x_to_y_of_t": "lignes %{x} à %{y} sur %{t}",
+        "open_hierarchy_popup": "ouvir la pop-in de hiérarchies"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
@@ -53,6 +54,7 @@
         "filter_results": "Suchergebnisse filtern",
         "filter_help": "Die Hierarchie unten zeigt alle auf der Karte vorhandenen Dienststellen",
         "page_from_to": "Seite %{f} von %{t}",
-        "results_x_to_y_of_t": "Zeile %{x} bis %{y} von %{t}"
+        "results_x_to_y_of_t": "Zeile %{x} bis %{y} von %{t}",
+        "open_hierarchy_popup": "öffnen des Pop-In für die Hierarchie"
     }
 }

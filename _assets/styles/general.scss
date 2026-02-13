@@ -246,6 +246,23 @@
     &.with-margin {
       margin-left: 18px;
     }
+
+    .modal {
+      .tree-modal-content {
+        background-color: white;
+        width: 80vw;
+        margin: 10vh auto;
+        height: 80vh;
+        padding: 1em;
+        overflow: scroll;
+
+        display: flex;
+
+        & > [is='tree-view'] {
+          width: 500%;
+        }
+      }
+    }
   }
 
   [is='loading-indicator'] {

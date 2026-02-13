@@ -1,24 +1,28 @@
 <tree-view class="{props['margin'] && 'with-margin'}">
   <template if={isRoot()}>
-    <div
-      is="tree-view"
-      parent-id={-1}
-      country="de"
-      label={cap(t('services_allemands'))}
-      on-input={props.onInput}
-      criteria={props['criteria']}
-      depth={depth() + 1}
-    ></div>
+    <div id="tree-popup" class="{state['modal'] ? 'modal fade' : ''}" tabindex="-1" role="dialog">
+      <div class="tree-modal-content">
+        <div
+          is="tree-view"
+          parent-id={-1}
+          country="de"
+          label={cap(t('services_allemands'))}
+          on-input={props.onInput}
+          criteria={props['criteria']}
+          depth={depth() + 1}
+        ></div>
 
-    <div
-      is="tree-view"
-      parent-id={-1}
-      country="fr"
-      label={cap(t('services_francais'))}
-      on-input={props.onInput}
-      criteria={props['criteria']}
-      depth={depth() + 1}
-    ></div>
+        <div
+          is="tree-view"
+          parent-id={-1}
+          country="fr"
+          label={cap(t('services_francais'))}
+          on-input={props.onInput}
+          criteria={props['criteria']}
+          depth={depth() + 1}
+        ></div>
+      </div>
+    </div>
   </template>
 
   <template if={!isRoot()}>
@@ -87,6 +91,22 @@
         if (this.isRoot()) {
           this.bus.on('tree-view:any-changed', event => this.onValueChanged())
         }
+      }
+
+      onMounted(props, state) {
+        if (!this.isRoot()) return
+
+        const element = document.querySelector('#tree-popup')
+
+        this.bus.on('tree-popup', event => {
+          this.update({modal: true})
+          $(element).modal('show')
+        })
+        
+        $(element).on('hidden.bs.modal', e => {
+          this.update({modal: false})
+          element.style.display = null;
+        })
       }
 
       isRoot() {

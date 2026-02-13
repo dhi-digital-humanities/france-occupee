@@ -45,6 +45,10 @@
           <img is="help-icon" text={cap(t('filter_help'))} />
         </div>
 
+        <a href="#" onclick={event => bus.emit('tree-popup')}>
+          {cap(t('open_hierarchy_popup'))}
+        </a>
+
         <div
           is="tree-view"
           on-input={props.onInput}
