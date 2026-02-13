@@ -13,6 +13,7 @@
     import 'leaflet.markercluster'
     import * as riot from 'riot'
     import cache from '../lib/cache.instance'
+    import config from '../../../_data/config'
 
     export default class {
       onMounted(props, state) {
@@ -34,22 +35,22 @@
           maxZoom: 18
         }).
           setView([51.505, -0.09], 6);
-        // const url = 'https://build.protomaps.com/20251103.pmtiles'
-        // const url = '/assets/overview.pmtiles'
         // xyz layer
-        const layer = L.tileLayer(
-          'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
-          {
-            maxZoom: 18
-          }
-        )
+        // const layer = L.tileLayer(
+        //   'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+        //   {
+        //     maxZoom: 18
+        //   }
+        // )
 
         // protomaps layer
-        // const layer = protomapsL.leafletLayer({
-        //   flavor: "light",
-        //   lang: "en",
-        //   url: 'https://static.wendig.io/private/Ahpul5ph/overview.pmtiles'
-        // })
+        const url = 'https://build.protomaps.com/20260213.pmtiles'
+        // const url = `${config().root_url}/map.pmtiles`
+        const layer = protomapsL.leafletLayer({
+          flavor: "light",
+          lang: "en",
+          url: url
+        })
 
         layer.addTo(map)
 

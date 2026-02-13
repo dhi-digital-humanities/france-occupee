@@ -2,7 +2,7 @@ import {Url} from '@wendig/lib'
 
 const detectLocale = () => {
   const url = Url.current()
-  const parts = url.path().match(/^\/([a-z]{2})(\/.*|$)/)
+  const parts = url.path().match(/^\/(de|fr|en)(\/.*|$)/)
 
   if (parts) return parts[1]
 

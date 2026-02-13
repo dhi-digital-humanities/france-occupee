@@ -76,6 +76,9 @@
           event.preventDefault()
         }
 
+        if (newPage <= 1) newPage = null
+        if (newPage >= this.totalPages()) newPage = this.totalPages()
+
         const h = this.props.pageTo
         if (h) h({page: newPage})
       }
