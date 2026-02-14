@@ -1,0 +1,109 @@
+<order-control>
+  <th each={field in state.fields.fields}>
+    <a
+      if={field.name}
+      href="#"
+      onclick={event => toggle(field.name, event)}
+    >
+      {field.label}
+      <!--
+    --><span class="{active(field.name, 'desc') ? 'active' : ''} indicator">
+          <svg is="icon" bootstrap-id="chevron-down"></svg>
+        </span>
+        <span class="{active(field.name, 'asc') ? 'active' : ''} indicator">
+          <svg is="icon" bootstrap-id="chevron-up"></svg>
+        </span><!--
+  -->
+    </a>
+    <template if={!field.name}>
+      {field.label}
+    </template>
+  </th>
+
+  <script>
+    import {Url} from '@wendig/lib'
+
+    export default class {
+      onBeforeMount(props, state) {
+        state.fields = props.fields
+      }
+
+      existing() {
+        const getter = this.props.existing || (() => {
+          const url = Url.current()
+          return url.hashParams()
+        })
+
+        return getter()
+      }
+
+      applyNew(params) {
+        const impl = this.props.applyNew || (params => {
+          const url = Url.current()
+          url.updateHashParams(params)
+          url.apply()
+        })
+
+        return impl(params)
+      }
+
+      fieldByName(name) {
+        for (const field of this.state.fields.fields) {
+          if (name === field.name) return field
+        }
+
+        return null
+      }
+
+      toggle(name, event) {
+        event.preventDefault()
+
+        const params = this.existing()
+        const cName = params['sort'] || this.state.fields.default
+        const cDirection = (
+          params['direction'] ||
+          this.fieldByName(cName).direction ||
+          'asc'
+        )
+
+
+        if (cName == name) {
+          let direction = {asc: 'desc', desc: 'asc'}[cDirection]
+          if (direction === this.fieldByName(name).direction) direction = null
+
+          this.applyNew({direction})
+        } else {
+          const newName = (name == this.state.fields.default ? null : name)
+
+          this.applyNew({sort: newName, direction: null})
+        }
+      }
+
+      effective() {
+        let result = this.existing()
+
+        const sort = result['sort'] || this.state.fields.default
+
+        return {
+          sort,
+          direction: result['direction'] || this.fieldByName(sort).direction
+        }
+      }
+
+      active(name, direction = null) {
+        const params = this.existing()
+        const cName = params['sort'] || this.state.fields.default
+        const cDirection = (
+          params['direction'] ||
+          this.fieldByName(cName).direction ||
+          'asc'
+        )
+
+        if (name != cName) return false
+        if (direction && direction != cDirection) return false
+
+        return true
+      }
+    }
+  </script>
+</order-control>

@@ -89,14 +89,21 @@ const setup = async () => {
     delete service['fts']
 
     // sort
-    service['sort'] = fold(service['name']) //.replaceAll(/ /g, '')
+    service['sort'] = {}
+    service['sort']['name'] = fold(service['name'])
     let fts_data = [service['name']]
     if (service['place']) {
       fts_data.push(service['place']['name'])
       fts_data.push(service['place']['current_city'])
       fts_data.push(service['place']['current_street'])
+
+      service['sort']['city'] = fold(service['place']['current_city'])
+      service['sort']['address'] = fold(service['place']['current_address'])
     }
     service['fts'] = fold(fts_data.join(' '))
+    service['sort']['fts'] = service['fts']
+    service['sort']['date'] = service['date']
+
 
     // build hierarchy
     const parent_id = service['parent_service_id']
@@ -247,7 +254,7 @@ database.action('services', data => {
     return true
   })
 
-  const sorted = util.sortBy(results, r => r['sort'])
+  const sorted = sortResults(results, criteria)
 
   return paginate(sorted, criteria)
 })
@@ -274,6 +281,19 @@ database.action('services-by-place', data => {
 
 
 // helpers
+
+const sortResults = (results, criteria) => {
+  const c = criteria['sort'] || 'name'
+
+  const sorted = util.sortBy(results, r => r['sort'][c])
+  return reverse(sorted, criteria)
+}
+
+const reverse = (results, criteria) => {
+  const d = criteria['direction'] || 'asc'
+
+  return (d === 'desc' ? results.reverse() : results)
+}
 
 const fold = (str) => {
   if (str == undefined) {return str}

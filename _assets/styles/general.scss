@@ -288,3 +288,48 @@
     }
   }
 }
+
+[is='order-control'] {
+  a {
+    white-space: nowrap;
+    font-weight: bold;
+  }
+
+  .indicator {
+    display: none;
+    color: fo.$orange;
+    margin-left: -2px;
+    margin-right: -2px;
+
+    &.active {
+      position: relative;
+      display: inline-block;
+      top: 2px;
+      left: 5px;
+    }
+  }
+
+  th {
+    padding: 5px;
+  }
+
+  th:nth-child(1) {
+    width: 150px;
+  }
+
+  th:nth-child(2) {
+    width: 50px;
+  }
+
+  th:nth-child(3) {
+    width: 150px;
+  }
+
+  th:nth-child(4) {
+    width: 150px;
+  }
+
+  th:last-child {
+    text-align: right;
+  }
+}

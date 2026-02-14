@@ -54,19 +54,10 @@
         ></div>
 
         <table class="table table-striped table-condensed">
-          <thead>
-            <tr>
-              <th scope="col">{cap(t('city'))}</th>
-              <th scope="col">{cap(t('date'))}</th>
-              <th scope="col">{cap(t('name'))}</th>
-              <th scope="col">{cap(t('address'))}</th>
-              <th scope="col" class="text-column">{cap(t('organization'))}</th>
-              <th scope="col" class="text-end">{cap(t('action'))}</th>
-            </tr>
-          </thead>
+          <thead is="order-control" fields={fields()} criteria={props.criteria} />
           <tbody>
             <tr each={service in props['data']['results']}>
-              <td>{service.city()}</td>
+              <td title={service.id()}>{service.city()}</td>
               <td>{service.date()}</td>
               <td>{service.name()}</td>
               <td>{service.address()}</td>
@@ -108,6 +99,20 @@
               props.onInput({results})
             }, 100)
           })
+        }
+      }
+
+      fields() {
+        return {
+          fields: [
+            {name: 'city', label: this.cap(this.t('city'))},
+            {name: 'date', label: this.cap(this.t('date'))},
+            {name: 'name', label: this.cap(this.t('name'))},
+            {name: 'address', label: this.cap(this.t('address'))},
+            {name: 'organization', label: this.cap(this.t('organization'))},
+            {label: this.cap(this.t('action'))}
+          ],
+          default: 'name'
         }
       }
     }

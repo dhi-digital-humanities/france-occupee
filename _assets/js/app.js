@@ -14,6 +14,7 @@ import Icon from './components/icon.riot'
 import Input from './components/input.riot'
 import LoadingIndicator from './components/loading_indicator.riot'
 import MainSearch from './components/main_search.riot'
+import OrderControl from './components/order_control.riot'
 import Pagination from './components/pagination.riot'
 import Results from './components/results.riot'
 import SubForm from './components/sub_form.riot'
@@ -30,6 +31,7 @@ riot.register('icon', Icon)
 riot.register('fo-input', Input)
 riot.register('loading-indicator', LoadingIndicator)
 riot.register('main-search', MainSearch)
+riot.register('order-control', OrderControl)
 riot.register('pagination', Pagination)
 riot.register('results', Results)
 riot.register('sub-form', SubForm)
