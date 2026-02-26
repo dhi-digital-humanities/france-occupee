@@ -64,21 +64,23 @@
           <img src="{config().root_url}/assets/images/csv.png" />
           {cap(t('export_csv'))}
         </button>
-        <button class="btn btn-primary d-block mt-3 w-100">
+
+        <button
+          onclick={event => link(event)}
+          class="btn btn-primary d-block mt-3 w-100"
+        >
           <img src="{config().root_url}/assets/images/check.png" />
           {cap(t('create_link'))}
         </button>
       </div>
     </div>
-
-    <!-- button type="submit" class="btn btn-primary w-100 mt-3">{cap(t('verbs.search'))}</button -->
   </form>
 
   <script>
     import {Url, util} from '@wendig/lib'
     import watchlist from '../lib/watchlist'
     import search from '../lib/search.instance'
-
+    
     export default class {
       onMounted(props, state) {
         const toggles = this.root.querySelectorAll("[data-toggle='tab']")
@@ -114,6 +116,20 @@
             contentType: 'text/csv',
             filename: 'favorites.csv'
           })
+        })
+      }
+
+      link(event) {
+        event.preventDefault()
+
+        const url = Url.current()
+        const idList = watchlist.unpack().join(',')
+
+        url.setHashParams({id: idList})
+        this.emit('open-modal', {
+          style: 'message',
+          title: this.cap(this.t('confirmation')),
+          content: this.t('link_created', {url: url.url()})
         })
       }
     }

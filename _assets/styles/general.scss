@@ -287,6 +287,15 @@
       width: 300px;
     }
   }
+
+  [is='modal'] {
+    code {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow-x: scroll;
+    }
+  }
 }
 
 [is='order-control'] {

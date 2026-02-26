@@ -1,0 +1,40 @@
+<modal
+  class="modal fade"
+  id="fo-modal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal-label"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modal-label">{state.title}</h4>
+      </div>
+      <div class="modal-body">
+        <template if={state.style === 'message'}>
+          <raw html={state.content} />
+        </template>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{cap(t('ok'))}</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    export default class {
+      onMounted() {
+        this.on('open-modal', event => this.open(event))
+      }
+
+      open(event) {
+        this.state = event.data
+        console.log(event.data)
+        this.update()
+
+        $(this.root).modal('show')
+      }
+    }
+  </script>
+</modal>

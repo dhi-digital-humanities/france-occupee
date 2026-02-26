@@ -216,9 +216,7 @@ const findServices = (criteria) => {
   return Object.values(storage['services']).filter(record => {
     if (record['status'] === 'deleted') return false // TODO: fix data
 
-    if (criteria['fav']) {
-      if (!matchesIds(criteria['id'], record['id'])) return false
-    }
+    if (!matchesIds(criteria['id'], record['id'])) return false
 
     const isParent = ((record['child_ids'] || []).length > 0)
     if (criteria['onlyParents'] && !isParent) return false
