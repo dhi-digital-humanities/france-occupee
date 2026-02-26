@@ -81,7 +81,7 @@
         delete p['page']
         p['perPage'] = 'max'
         p['onlyGeo'] = true
-        promises.push(search.services(p))
+        promises.push(search.servicesMap(p))
 
         Promise.all(promises).then(datas => {
           const [data, mapData] = datas

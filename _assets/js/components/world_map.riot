@@ -44,7 +44,7 @@
         // )
 
         // protomaps layer
-        const url = 'https://build.protomaps.com/20260213.pmtiles'
+        const url = 'https://build.protomaps.com/20260225.pmtiles'
         // const url = `${config().root_url}/map.pmtiles`
         const layer = protomapsL.leafletLayer({
           flavor: "light",
@@ -181,7 +181,7 @@
         if (!this.root.checkVisibility()) return
 
         const data = this.props['mapData']
-        // console.log(data)
+        console.log(data)
         // Thuy: here, `props['mapData]` has the data
         // console.log(props['mapsData'])
         // for example:

@@ -13,45 +13,45 @@ let storage = {
 let database = new Database()
 onmessage = database.handler
 
-const packTest = (services) => {
-  let test = indexBy(services, (a) => `${a['name']}-${a['place_id']}`, true)
-  for (const k of Object.keys(test)) {
-    if (test[k].length < 2) {
-      delete test[k]
-    }
-  }
+// const packTest = (services) => {
+//   let test = indexBy(services, (a) => `${a['name']}-${a['place_id']}`, true)
+//   for (const k of Object.keys(test)) {
+//     if (test[k].length < 2) {
+//       delete test[k]
+//     }
+//   }
 
-  let idMap = {}
-  let drop = []
-  for (const [k, values] of Object.entries(test)) {
-    let value = values[0]
-    value['source_ids'] = [value['source_id']]
-    value['parent_ids'] = [value['parent_source_id']]
-    value['place_ids'] = [value['place_id']]
+//   let idMap = {}
+//   let drop = []
+//   for (const [k, values] of Object.entries(test)) {
+//     let value = values[0]
+//     value['source_ids'] = [value['source_id']]
+//     value['parent_ids'] = [value['parent_source_id']]
+//     value['place_ids'] = [value['place_id']]
 
-    for (const v of values.slice(1)) {
-      value['source_ids'].push(v['source_id'])
-      value['parent_ids'].push(v['parent_source_id'])
-      value['place_ids'].push(v['place_id'])
+//     for (const v of values.slice(1)) {
+//       value['source_ids'].push(v['source_id'])
+//       value['parent_ids'].push(v['parent_source_id'])
+//       value['place_ids'].push(v['place_id'])
 
-      drop.push(v['id'])
-      idMap[v['id']] = value['id']
-    }
+//       drop.push(v['id'])
+//       idMap[v['id']] = value['id']
+//     }
 
-    value['parent_ids'] = util.unique(value['parent_ids']).filter(e => e !== undefined)
-    value['place_ids'] = util.unique(value['place_ids']).filter(e => e !== undefined)
-    value['source_ids'] = util.unique(value['source_ids']).filter(e => e !== undefined)
+//     value['parent_ids'] = util.unique(value['parent_ids']).filter(e => e !== undefined)
+//     value['place_ids'] = util.unique(value['place_ids']).filter(e => e !== undefined)
+//     value['source_ids'] = util.unique(value['source_ids']).filter(e => e !== undefined)
 
-    // const keys = ['name', 'place_id', 'status']
-    // for (const key of keys) {
-    //   const values = util.unique(v.map(r => r[key]))
-    //   if (values.length > 1) {
-    //     console.log(k, v, key, values)
-    //   }
-    // }
-  }
-  console.log(test)
-}
+//     // const keys = ['name', 'place_id', 'status']
+//     // for (const key of keys) {
+//     //   const values = util.unique(v.map(r => r[key]))
+//     //   if (values.length > 1) {
+//     //     console.log(k, v, key, values)
+//     //   }
+//     // }
+//   }
+//   console.log('test', test)
+// }
 
 const setup = async () => {
   const places = await fetch(`${config().root_url}/data/place.json`).then(r => r.json())
@@ -210,10 +210,8 @@ const dig = (obj, chain = []) => {
   return result
 }
 
-database.action('services', data => {
-  const criteria = sanitizeCriteria(data.criteria)
-
-  const results = Object.values(storage['services']).filter(record => {
+const findServices = (criteria) => {
+  return Object.values(storage['services']).filter(record => {
     if (record['status'] === 'deleted') return false // TODO: fix data
 
     if (criteria['fav']) {
@@ -253,10 +251,31 @@ database.action('services', data => {
 
     return true
   })
+}
 
+database.action('services', data => {
+  const criteria = sanitizeCriteria(data.criteria)
+  const results = findServices(criteria)
   const sorted = sortResults(results, criteria)
 
   return paginate(sorted, criteria)
+})
+
+database.action('places-map', data => {
+  const criteria = sanitizeCriteria(data.criteria)
+  const results = findServices(criteria)
+
+  const byPlaceId = indexBy(results, r => r['place_id'], true)
+  const places = Object.entries(byPlaceId).map(([placeId, services]) => {
+    let d = {
+      place: storage['places'][placeId],
+      country: services[0]['source']['country']
+    }
+    
+    return d
+  })
+
+  return paginate(places, criteria)
 })
 
 database.action('services-by-place', data => {
