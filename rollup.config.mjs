@@ -2,6 +2,7 @@ import {nodeResolve} from '@rollup/plugin-node-resolve'
 import riot from 'rollup-plugin-riot'
 import commonjs from '@rollup/plugin-commonjs'
 import terser from '@rollup/plugin-terser'
+import nodePolyfills from 'rollup-plugin-polyfill-node'
 
 import replace from '@rollup/plugin-replace'
 import dotenv from 'dotenv'
@@ -29,6 +30,7 @@ const app = {
     nodeResolve(),
     commonjs(),
     replace(envReplacements),
+    nodePolyfills(),
     riot(),
     ...(optimize ? [terser()] : [])
   ]
@@ -45,6 +47,7 @@ const database = {
     nodeResolve(),
     commonjs(),
     replace(envReplacements),
+    nodePolyfills(),
     ...(optimize ? [terser()] : [])
   ]
 }

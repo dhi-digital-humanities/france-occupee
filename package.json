@@ -2,12 +2,9 @@
   "type": "module",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",
-    "@babel/core": "^7.17.8",
-    "@babel/preset-env": "^7.16.11",
     "@popperjs/core": "^2.10.2",
     "@riotjs/cli": "^10.0.0",
     "@riotjs/compiler": "^10.0.1",
-    "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
@@ -15,6 +12,7 @@
     "@wendig/lib": "git+https://git.wendig.io/git/js-lib.git",
     "bootstrap": "^5.3.8",
     "concurrently": "^9.1.0",
+    "csv-stringify": "^6.6.0",
     "dotenv": "^17.2.3",
     "feather-icons": "^4.29.0",
     "leaflet": "^1.9.3",
@@ -23,6 +21,7 @@
     "riot": "^10.1.0",
     "rollup": "^4.24.4",
     "rollup-plugin-dotenv": "^0.5.1",
+    "rollup-plugin-polyfill-node": "^0.13.0",
     "rollup-plugin-riot": "^10.0.0",
     "sass": "^1.93.2"
   },

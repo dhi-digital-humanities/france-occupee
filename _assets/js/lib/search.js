@@ -43,4 +43,10 @@ export default class Search extends WendigSearch {
       return data
     })
   }
+
+  csv(ids) {
+    const criteria = {fav: 'true', csv: 'true', id: ids}
+
+    return this.postMessage({action: 'services', criteria})
+  }
 }

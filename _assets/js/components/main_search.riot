@@ -57,7 +57,10 @@
       </div>
       
       <div class="tab-pane fade {!isFav() ? '' : 'active in'}" id="favorites-pane">
-        <button class="btn btn-warning d-block mt-3 w-100">
+        <button
+          onclick={event => csv(event)}
+          class="btn btn-warning d-block mt-3 w-100"
+        >
           <img src="{config().root_url}/assets/images/csv.png" />
           {cap(t('export_csv'))}
         </button>
@@ -72,8 +75,9 @@
   </form>
 
   <script>
-    import {Url} from '@wendig/lib'
+    import {Url, util} from '@wendig/lib'
     import watchlist from '../lib/watchlist'
+    import search from '../lib/search.instance'
 
     export default class {
       onMounted(props, state) {
@@ -94,6 +98,23 @@
 
       favCount() {
         return watchlist.count()
+      }
+
+      csv(event) {
+        event.preventDefault()
+
+        search.csv(watchlist.unpack().join(',')).then(data => {
+          const headers =
+            ['city', 'name', 'organization', 'date', 'country'].
+            map(h => this.cap(this.t(h))).
+            join(';')
+          const csv = headers + "\n" + data['csv']
+
+          util.download(csv, {
+            contentType: 'text/csv',
+            filename: 'favorites.csv'
+          })
+        })
       }
     }
   </script>

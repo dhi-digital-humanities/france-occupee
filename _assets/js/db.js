@@ -1,5 +1,7 @@
+import {stringify} from 'csv-stringify/sync'
+
 import {indexBy} from './lib/util'
-import {Database, util} from '@wendig/lib'
+import {Database, util, i18n} from '@wendig/lib'
 import config from '../../_data/config'
 
 
@@ -253,12 +255,33 @@ const findServices = (criteria) => {
   })
 }
 
+const toCsv = (results) => {
+  const rows = results.map(r => {
+    const y = r['source']['d_edition_year']
+    const m = r['source']['d_edition_month']
+
+    return [
+      r['place'] ? r['place']['current_city'] : '',
+      r['name'],
+      r['hierarchy'],
+      `${y}/${m}`,
+      r['source']['country']
+    ]
+  })
+
+  return stringify(rows, {delimiter: ';'})
+}
+
 database.action('services', data => {
   const criteria = sanitizeCriteria(data.criteria)
   const results = findServices(criteria)
   const sorted = sortResults(results, criteria)
 
-  return paginate(sorted, criteria)
+  return (
+    criteria['csv'] == 'true' ?
+    {csv: toCsv(sorted)} :
+    paginate(sorted, criteria)
+  )
 })
 
 database.action('places-map', data => {
