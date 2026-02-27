@@ -3,6 +3,7 @@ export default function () {
     env: process.env.APP_ENV,
     root_url: process.env.ROOT_URL,
     image_path: process.env.IMAGE_PATH || '',
+    pmtiles_url: process.env.PMTILES_URL,
     fonts: []
   }
 }
