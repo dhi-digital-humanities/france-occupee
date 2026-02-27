@@ -17,12 +17,37 @@ export default class Place {
     return this.d['current_city']
   }
 
-  address() {
-    const h = this.d['current_house_number']
-    const s = this.d['current_street']
-    const z = this.d['current_zip']
+  hasAddress() {
+    return (this.address() !== '')
+  }
 
-    return [h, s, z].filter(e => !!e).join(' ')
+  hasFormerAddress() {
+    const fa = this.formerAddress(false)
+    if (fa === '') return false
+
+    const ca = this.address(false)
+
+    return fa !== ca
+  }
+
+  address(zip=true) {
+    let parts = []
+    parts.push(this.d['current_house_number'])
+    parts.push(this.d['current_street'])
+
+    if (zip) {
+      parts.push(this.d['current_zip'])
+    }
+
+    return parts.filter(e => !!e).join(' ')
+  }
+
+  formerAddress() {
+    let parts = []
+    parts.push(this.d['former_house_number'])
+    parts.push(this.d['former_street'])
+
+    return parts.filter(e => !!e).join(' ')
   }
 
   geo() {

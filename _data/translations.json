@@ -11,6 +11,9 @@
         "date": "date",
         "name": "nom",
         "address": "adresse",
+        "former_address": "adresse ancienne",
+        "current_address": "adresse actuelle",
+        "no_address_available": "aucune adresse disponible",
         "organization": "organisation",
         "action": "action",
         "map_view": "affichage carte",
@@ -27,7 +30,9 @@
         "page_from_to": "page %{f} sur %{t}",
         "results_x_to_y_of_t": "lignes %{x} à %{y} sur %{t}",
         "open_hierarchy_popup": "ouvir la pop-in de hiérarchies",
-        "link_created": "Utilisez ce lien pour retrouver votre sélection :<br /><code>%{url}</code>"
+        "link_created": "Utilisez ce lien pour retrouver votre sélection :<br /><code>%{url}</code>",
+        "information": "informations",
+        "services": "services"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
@@ -41,6 +46,9 @@
         "date": "Datum",
         "name": "Name",
         "address": "Adresse",
+        "former_address": "frühere Adresse",
+        "current_address": "aktuelle Adresse",
+        "no_address_available": "keine Adresse verfügbar",
         "organization": "Organisation",
         "action": "Aktion",
         "map_view": "Kartenansicht",
@@ -57,6 +65,8 @@
         "page_from_to": "Seite %{f} von %{t}",
         "results_x_to_y_of_t": "Zeile %{x} bis %{y} von %{t}",
         "open_hierarchy_popup": "öffnen des Pop-In für die Hierarchie",
-        "link_created": "Verwenden Sie diesen Link um auf Ihre Auswahl zuzugreifen:<br /><code>%{url}</code>"
+        "link_created": "Verwenden Sie diesen Link um auf Ihre Auswahl zuzugreifen:<br /><code>%{url}</code>",
+        "information": "Information",
+        "services": "Dienststellen"
     }
 }

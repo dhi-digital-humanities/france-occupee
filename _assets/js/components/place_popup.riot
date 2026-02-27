@@ -1,26 +1,38 @@
 <place-popup>
-  <div class="service-popup" class:has-image={!!state.imageUrl} data-place-id={state.placeId}>
+  <div
+    if={state.place && state.services}
+    class="service-popup"
+    class:has-image={!!state.imageUrl}
+    data-place-id={state.placeId}
+  >
     <div if={state.placeName} class="popup-title">
       {state.placeName}
     </div>
     <div class="popup-tabs">
       <button class="tab-btn active" data-tab="info" onclick={switchTab}>
-        INFORMATIONS
+        {cap(t('information'))}
       </button>
       <button class="tab-btn" data-tab="services" onclick={switchTab}>
-        SERVICES
+        {cap(t('services'))}
       </button>
     </div>
     
     <div id="tab-info" class="tab-content active">
       <div class="address-section">
-        <h4>Adresse</h4>
-        <div if={state.address || state.city} class="address-row">
+        <h4>{cap(t('address'))}</h4>
+        <div if={state.place.hasAddress()} class="address-row">
           {state.address || ''}{state.address && state.city ? ', ' : ''}{state.city || ''}
         </div>
-        <div if={!state.address && !state.city} class="no-address">
-          Aucune adresse disponible
+        <div if={!state.place.hasAddress()} class="no-address">
+          {cap(t('no_address_available'))}
         </div>
+
+        <template if={this.state.place.hasFormerAddress()}>
+          <h4 class="mt-4">{cap(t('former_address'))}</h4>
+          <div class="address-row">
+            {state.place.formerAddress()}
+          </div>
+        </template>
       </div>
       
       <div if={state.imageUrl} class="image-container">
@@ -33,15 +45,15 @@
         <table class="services-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Nom</th>
-              <th>Organisation</th>
-              <th class="text-center">Action</th>
+              <th>{cap(t('date'))}</th>
+              <th>{cap(t('name'))}</th>
+              <th>{cap(t('organization'))}</th>
+              <th class="text-center">{cap(t('action'))}</th>
             </tr>
           </thead>
           <tbody class="services-tbody">
             <tr>
-              <td colspan="4" class="loading">Chargement...</td>
+              <td colspan="4" class="loading"></td>
             </tr>
           </tbody>
         </table>
