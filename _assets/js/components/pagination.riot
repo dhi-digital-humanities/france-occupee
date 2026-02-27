@@ -14,7 +14,17 @@
     >
       <img src="{config().root_url}/assets/images/pagination/03.png" />
     </a>
-    <div class="indicator">{pageFromTo()}</div>
+    <div class="indicator">
+      {cap(t('page'))}
+      <input
+        type="text"
+        value={props.page}
+        onchange={event => onPageEntry(event)}
+        class="form-control"
+      />
+      {t('of')}
+      {this.totalPages()}
+    </div>
     <a
       onclick={event => pageTo(this.props.page + 1, event)}
       href="#"
@@ -71,6 +81,12 @@
         return total > this.props.perPage
       }
 
+      onPageEntry(event) {
+        const value = parseInt(event.target.value)
+
+        this.pageTo(value)
+      }
+
       pageTo(newPage, event) {
         if (event) {
           event.preventDefault()
@@ -93,15 +109,6 @@
 
       totalPages() {
         return Math.ceil(this.props.total / this.props.perPage)
-      }
-
-      pageFromTo() {
-        const result = this.t('page_from_to', {
-          f: this.props.page,
-          t: this.totalPages()
-        })
-
-        return this.cap(result)
       }
 
       xToYofT() {
