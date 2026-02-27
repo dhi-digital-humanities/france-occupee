@@ -22,16 +22,11 @@
     export default class {
       fromUrl() {
         const c = this.props['criteria']
-        if (!c) return this.years()
-        if (!c['years']) return this.years()
+        if (!c) return []
+        if (!c['years']) return []
 
         const result = c['years'].split(/\s*,\s*/).map(y => parseInt(y))
-
-        return (
-          result.length > 0 ?
-          result : 
-          this.years()
-        )
+        return result
       }
 
       onUpdated() {
@@ -42,6 +37,9 @@
       }
 
       isChecked(year) {
+        const fu = this.fromUrl()
+        if (fu.length === 0) return true
+
         return this.fromUrl().indexOf(year) != -1
       }
 
@@ -50,9 +48,11 @@
         event.stopPropagation()
         event.stopImmediatePropagation()
 
-        console.log('x')
-
         let years = this.fromUrl()
+        if (years.length === 0) {
+          this.props.onInput({years: `${year}`})
+          return
+        }
 
         const index = years.indexOf(year)
         if (index == -1) {
@@ -73,10 +73,6 @@
 
       years() {
         return [1940, 1941, 1942, 1943, 1944, 1945]
-      }
-
-      value() {
-
       }
     }
   </script>
