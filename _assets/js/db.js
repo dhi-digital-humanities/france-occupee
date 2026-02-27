@@ -215,8 +215,6 @@ const dig = (obj, chain = []) => {
 
 const findServices = (criteria) => {
   return Object.values(storage['services']).filter(record => {
-    if (record['status'] === 'deleted') return false // TODO: fix data
-
     if (!matchesIds(criteria['id'], record['id'])) return false
 
     const isParent = ((record['child_ids'] || []).length > 0)
@@ -243,6 +241,9 @@ const findServices = (criteria) => {
 
     const country = dig(record, ['source', 'country'])
     if (!matchesExactly(criteria['country'], country)) return false
+
+    const status = record['status']
+    if (!matchesExactly(criteria['status'], status)) return false
 
     if (!criteria['fav']) {
       const fts = record['fts']

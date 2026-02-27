@@ -75,6 +75,7 @@
           p['id'] = ids.map(id => `${id}`).join(',')
         }
         p['perPage'] = 15
+        p['status'] = 'visible'
         // console.log(p)
 
         promises.push(search.services(p))
