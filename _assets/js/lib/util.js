@@ -28,7 +28,16 @@ function indexBy(array, criteria, multiple=false) {
   return result
 }
 
+const paginate = (items, perPage, page) => {
+  const total = items.length
+  if (perPage === 'max') perPage = total
+
+  const start = (page - 1) * perPage
+  return items.slice(start, start + perPage)
+}
+
 export {
   detectLocale,
-  indexBy
+  indexBy,
+  paginate
 }

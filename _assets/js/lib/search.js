@@ -1,5 +1,6 @@
 import config from '../../../_data/config'
 import Service from './service'
+import Place from './place'
 import MapPlace from './map_place'
 
 import {Url, util, Search as WendigSearch} from '@wendig/lib'
@@ -14,6 +15,15 @@ export default class Search extends WendigSearch {
     }
 
     super(url)
+  }
+
+  place(id) {
+    return this.postMessage({action: 'place', criteria: {id}}).then(data => {
+      data['place'] = new Place(data['place'])
+      data['services'] = data['services'].map(r => new Service(r))
+
+      return data
+    })
   }
 
   services(criteria) {

@@ -60,7 +60,11 @@
               <td title={service.id()}>{service.city()}</td>
               <td>{service.date()}</td>
               <td>{service.name()}</td>
-              <td>{service.address()}</td>
+              <td>
+                <a href="#" onclick={event => onOpenPopup(service, event)}>
+                  {service.address()}
+                </a>
+              </td>
               <td>{service.hierarchy()}</td>
               <td class="text-end">
                 <div is="fav-control" service-id={service.id()}></div>
@@ -100,6 +104,16 @@
             }, 100)
           })
         }
+      }
+
+      onOpenPopup(service, event) {
+        event.preventDefault()
+
+        this.emit('open-modal', {
+          style: 'component',
+          component: 'place-popup'
+        })
+        this.emit('load-popup-content', {placeId: service.placeId()})
       }
 
       fields() {

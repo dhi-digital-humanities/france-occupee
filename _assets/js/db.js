@@ -1,6 +1,6 @@
 import {stringify} from 'csv-stringify/sync'
 
-import {indexBy} from './lib/util'
+import {indexBy, paginate as upaginate} from './lib/util'
 import {Database, util, i18n} from '@wendig/lib'
 import config from '../../_data/config'
 
@@ -67,6 +67,7 @@ const setup = async () => {
   // console.log(sources.length)
 
   storage['places'] = indexBy(places, 'id')
+  storage['servicesByPlaceId'] = indexBy(services, s => s['place_id'], true)
   storage['services'] = indexBy(services, 'id')
   storage['sources'] = indexBy(sources, 'id')
 
@@ -299,6 +300,15 @@ database.action('places-map', data => {
   return paginate(places, criteria)
 })
 
+database.action('place', data => {
+  const criteria = sanitizeCriteria(data.criteria)
+  const placeId = criteria['id']
+  const place = storage['places'][placeId]
+  const services = storage['servicesByPlaceId'][placeId]
+
+  return {place, services}
+})
+
 database.action('services-by-place', data => {
   const placeId = data.placeId
   if (!placeId) return { page: 1, perPage: 0, total: 0, results: [] }
@@ -363,7 +373,7 @@ const sanitizeCriteria = (input) => {
       split(/\s*,\s*/).
       map(y => parseInt(y))
   }
-  if (criteria['id']) {
+  if (criteria['id'] && !Number.isInteger(criteria['id'])) {
     criteria['id'] = criteria['id'].
       split(/\s*,\s*/).
       map(y => parseInt(y))
@@ -395,10 +405,8 @@ const paginate = (records, criteria) => {
   const total = records.length
   const page = criteria.page
   let perPage = criteria.perPage
-  if (perPage === 'max') perPage = total
 
-  const start = (page - 1) * perPage
-  const results = records.slice(start, start + perPage)
+  const results = upaginate(records, perPage, page)
 
   return {
     page,

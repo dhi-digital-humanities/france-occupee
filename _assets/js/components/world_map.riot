@@ -1,6 +1,10 @@
 <world-map>
   <div class="map"></div>
 
+  <div class="d-none">
+    <div is="place-popup"></div>
+  </div>
+
   <a
     href="#"
     onclick={event => onFullScreen(event)}
@@ -11,7 +15,7 @@
     import * as L from 'leaflet'
     import * as protomapsL from 'protomaps-leaflet'
     import 'leaflet.markercluster'
-    import * as riot from 'riot'
+    import riot from '../lib/riot'
     import cache from '../lib/cache.instance'
     import config from '../../../_data/config'
 
@@ -62,7 +66,24 @@
         })
         markers.addTo(map)
 
-        map.on('popupopen', event => this.onPopup(event))
+        // register popup function
+        const popupContent = this.root.querySelector("[is='place-popup']")
+        markers.on('click', event => {
+          const marker = event.layer
+          const service = marker.service
+
+          const map = this.state['map']
+          map.openPopup(popupContent, marker.getLatLng(), {
+            maxWidth: 600,
+            maxHeight: 800,
+            className: 'service-popup-container',
+            offset: [0, -10]
+          })
+
+          this.emit('load-popup-content', {
+            placeId: service.placeId()
+          })
+        })
 
         this.state['map'] = map
         this.state['markers'] = markers
@@ -160,19 +181,6 @@
         })
       }
 
-      createPopupContent(service) {
-        // Tạo placeholder div, sẽ được thay thế khi popup mở
-        const container = document.createElement('div')
-        container.style.minWidth = '600px'
-        container.style.maxWidth = '800px'
-        container.innerHTML = '<div style="padding: 20px; text-align: center;">Chargement...</div>'
-        
-        // Lưu service để mount component sau
-        container._service = service
-        
-        return container
-      }
-
       onUpdated(props, state) {
         this.refresh()
       }
@@ -181,11 +189,6 @@
         if (!this.root.checkVisibility()) return
 
         const data = this.props['mapData']
-        console.log(data)
-        // Thuy: here, `props['mapData]` has the data
-        // console.log(props['mapsData'])
-        // for example:
-
         const markers = this.state['markers']
 
         markers.clearLayers()
@@ -196,19 +199,11 @@
           const icon = this.getIconForCountry(country)
           const marker = L.marker(service.geo(), { 
             icon: icon,
-            country: country  // Lưu country vào marker để dùng khi clustering
+            country: country // Lưu country vào marker để dùng khi clustering
           })
           
           // Lưu service vào marker để dùng khi click
           marker.service = service
-          
-          // Tạo popup với thông tin service
-          const popupContent = this.createPopupContent(service)
-          marker.bindPopup(popupContent, {
-            maxWidth: 800,
-            minWidth: 600,
-            className: 'service-popup-container'
-          })
 
           bulk.push(marker)
         }
@@ -224,75 +219,6 @@
         }
 
         this.state['map'].flyToBounds(bounds, {duration: 1.0, easeLinearity: 1.0})
-      }
-
-      onPopup(event) {
-        const marker = event.popup._source
-        const popup = event.popup
-
-        if (!popup) return
-            
-        const element = popup.getElement()
-        if (element) {
-          const container = element.querySelector('div[style*="min-width: 600px"]')
-          if (container && container._service && !container._popupMounted) {
-            // Đợi một chút để đảm bảo DOM đã sẵn sàng
-            setTimeout(() => {
-              try {
-                const service = container._service
-                const address = service.address()
-                const city = service.city()
-                const placeId = service.placeId()
-                const placeName = service.placeName()
-                const imageUrl = service.imageUrl()
-                
-                // Tạo element với attribute is để mount component
-                container.innerHTML = `<div is="place-popup"></div>`
-                const popupElement = container.querySelector('[is="place-popup"]')
-                
-                if (popupElement) {
-                  const mounted = riot.mount(popupElement, {
-                    placeId: placeId,
-                    placeName: placeName,
-                    address: address,
-                    city: city,
-                    imageUrl: imageUrl
-                  })
-                  
-                  // Popup luôn có chiều cao cố định 350px
-                  if (mounted && mounted.length > 0) {
-                    const popupWrapper = element.closest('.leaflet-popup-content-wrapper')
-                    const popupContent = element.closest('.leaflet-popup-content')
-                    if (popupWrapper) {
-                      popupWrapper.style.height = '350px'
-                      popupWrapper.style.maxHeight = '350px'
-                    }
-                    if (popupContent) {
-                      popupContent.style.height = '350px'
-                      popupContent.style.maxHeight = '350px'
-                    }
-                    // Cập nhật lại kích thước popup nếu có method
-                    if (popup && typeof popup.invalidateSize === 'function') {
-                      popup.invalidateSize()
-                    }
-                  }
-                  
-                  if (mounted && mounted.length > 0) {
-                    container._popupMounted = true
-                  } else {
-                    throw new Error('Failed to mount place-popup component')
-                  }
-                } else {
-                  throw new Error('Could not find place-popup element')
-                }
-              } catch (error) {
-                console.error('Error mounting place-popup:', error)
-                console.error('Error details:', error.stack)
-                container.innerHTML = `<div style="padding: 20px; color: red;">Erreur lors du chargement: ${error.message}</div>`
-              }
-            }, 50)
-          }
-        }
       }
     }
   </script>

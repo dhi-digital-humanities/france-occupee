@@ -1,7 +1,7 @@
 <place-popup>
-  <div class="service-popup" class:has-image={!!props.imageUrl} data-place-id={props.placeId}>
-    <div if={props.placeName} class="popup-title">
-      {props.placeName}
+  <div class="service-popup" class:has-image={!!state.imageUrl} data-place-id={state.placeId}>
+    <div if={state.placeName} class="popup-title">
+      {state.placeName}
     </div>
     <div class="popup-tabs">
       <button class="tab-btn active" data-tab="info" onclick={switchTab}>
@@ -15,16 +15,16 @@
     <div id="tab-info" class="tab-content active">
       <div class="address-section">
         <h4>Adresse</h4>
-        <div if={props.address || props.city} class="address-row">
-          {props.address || ''}{props.address && props.city ? ', ' : ''}{props.city || ''}
+        <div if={state.address || state.city} class="address-row">
+          {state.address || ''}{state.address && state.city ? ', ' : ''}{state.city || ''}
         </div>
-        <div if={!props.address && !props.city} class="no-address">
+        <div if={!state.address && !state.city} class="no-address">
           Aucune adresse disponible
         </div>
       </div>
       
-      <div if={props.imageUrl} class="image-container">
-        <img src={props.imageUrl} alt={props.placeName || 'Place image'} onerror={handleImageError} />
+      <div if={state.imageUrl} class="image-container">
+        <img src={state.imageUrl} alt={state.placeName || 'Place image'} onerror={handleImageError} />
       </div>
     </div>
     
@@ -45,17 +45,13 @@
             </tr>
           </tbody>
         </table>
-        <div class="services-pagination">
-          <div class="pagination-controls">
-            <button class="page-btn" data-action="first" onclick={handlePagination}>««</button>
-            <button class="page-btn" data-action="prev" onclick={handlePagination}>«</button>
-            <input type="number" class="page-input" value="1" min="1" onchange={handlePageInput} />
-            <span class="page-info">sur 1</span>
-            <button class="page-btn" data-action="next" onclick={handlePagination}>»</button>
-            <button class="page-btn" data-action="last" onclick={handlePagination}>»»</button>
-          </div>
-          <div class="pagination-info"></div>
-        </div>
+
+        <div if={state.services} is="pagination"
+          total={state.services.length}
+          per-page={10}
+          page={state.page || 1}
+          page-to={data => onPagination(data)}
+        />
       </div>
     </div>
   </div>
@@ -63,12 +59,14 @@
   <script>
     import config from '../../../_data/config'
     import search from '../lib/search.instance'
+    import {paginate} from '../lib/util'
 
-    export default {
-      onMounted(props, state) {
-        state.currentPage = 1
-        state.servicesLoaded = false
-      },
+    export default class {
+      onBeforeMount() {
+        this.switchTab = this.switchTab.bind(this)
+
+        this.on('load-popup-content', event => this.onLoadPopupContent(event))
+      }
 
       switchTab(event) {
         const tabName = event.target.getAttribute('data-tab')
@@ -93,23 +91,57 @@
           
           // Load services when switching to SERVICES tab
           if (tabName === 'services' && !this.state.servicesLoaded) {
-            this.loadServices(this.props.placeId, 1)
+            this.loadServices(this.state.place.id(), 1)
             this.state.servicesLoaded = true
           }
         }
-      },
+      }
 
-      async loadServices(placeId, page) {
+      onPagination(data) {
+        const page = data.page
+        this.update({page})
+      }
+
+      onLoadPopupContent(event) {
+        const placeId = event.data.placeId
+        this.loadPlace(placeId)
+      }
+
+      async loadPlace(placeId) {
+        search.place(placeId).then(data => {
+          const place = data['place']
+          const services = data['services']
+
+          this.update({
+            place: place,
+            services: services,
+            page: 1,
+            address: place.address(),
+            city: place.city(),
+            placeName: place.name(),
+            imageUrl: place.imageUrl()
+          })
+        })
+      }
+
+      onUpdated() {
+        this.loadServices()
+      }
+
+      loadServices() {
+        if (!this.state.services) return
+
         const tbody = this.root.querySelector('.services-tbody')
-        const pagination = this.root.querySelector('.services-pagination')
+        // const pagination = this.root.querySelector('.services-pagination')
         
         try {
-          const data = await search.servicesByPlace(placeId, page, 10)
+          // const data = await search.servicesByPlace(placeId, page, 10)
+          const services = paginate(this.state.services, 10, this.state.page || 1)
           
-          if (data.results.length === 0) {
+          if (services.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="no-data">Aucun service trouvé</td></tr>'
           } else {
-            tbody.innerHTML = data.results.map(service => {
+            tbody.innerHTML = services.map(service => {
               const date = service.date() || ''
               const name = service.name() || ''
               const hierarchy = service.hierarchy() || ''
@@ -125,65 +157,11 @@
               `
             }).join('')
           }
-          
-          // Update pagination
-          const pageInput = pagination.querySelector('.page-input')
-          const pageInfo = pagination.querySelector('.page-info')
-          const paginationInfo = pagination.querySelector('.pagination-info')
-          
-          pageInput.value = data.page
-          pageInput.max = Math.ceil(data.total / data.perPage)
-          pageInfo.textContent = `sur ${Math.ceil(data.total / data.perPage)}`
-          paginationInfo.textContent = `Lignes de ${((data.page - 1) * data.perPage) + 1} à ${Math.min(data.page * data.perPage, data.total)} sur ${data.total}`
-          
-          // Update pagination buttons
-          const firstBtn = pagination.querySelector('[data-action="first"]')
-          const prevBtn = pagination.querySelector('[data-action="prev"]')
-          const nextBtn = pagination.querySelector('[data-action="next"]')
-          const lastBtn = pagination.querySelector('[data-action="last"]')
-          
-          firstBtn.disabled = data.page === 1
-          prevBtn.disabled = data.page === 1
-          nextBtn.disabled = data.page >= Math.ceil(data.total / data.perPage)
-          lastBtn.disabled = data.page >= Math.ceil(data.total / data.perPage)
-          
-          this.state.currentPage = data.page
-          
         } catch (error) {
           console.error('Error loading services:', error)
           tbody.innerHTML = '<tr><td colspan="4" class="error">Erreur lors du chargement</td></tr>'
         }
-      },
-
-      handlePagination(event) {
-        const action = event.target.getAttribute('data-action')
-        const pageInput = this.root.querySelector('.page-input')
-        const placeId = parseInt(this.root.querySelector('.service-popup').getAttribute('data-place-id'))
-        let page = parseInt(pageInput.value)
-        
-        switch(action) {
-          case 'first':
-            page = 1
-            break
-          case 'prev':
-            page = Math.max(1, page - 1)
-            break
-          case 'next':
-            page = Math.min(parseInt(pageInput.max), page + 1)
-            break
-          case 'last':
-            page = parseInt(pageInput.max)
-            break
-        }
-        
-        this.loadServices(placeId, page)
-      },
-
-      handlePageInput(event) {
-        const page = Math.max(1, Math.min(parseInt(event.target.max), parseInt(event.target.value) || 1))
-        const placeId = parseInt(this.root.querySelector('.service-popup').getAttribute('data-place-id'))
-        this.loadServices(placeId, page)
-      },
+      }
 
       handleImageError(event) {
         event.target.style.display = 'none'
@@ -191,4 +169,3 @@
     }
   </script>
 </place-popup>
-

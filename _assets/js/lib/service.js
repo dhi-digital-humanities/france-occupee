@@ -1,4 +1,4 @@
-import config from '../../../_data/config'
+import Place from './place'
 
 export default class Service {
   constructor(data) {
@@ -10,7 +10,7 @@ export default class Service {
   }
 
   city() {
-    return this.d['place']['current_city']
+    return this.place().city()
   }
 
   date() {
@@ -24,19 +24,20 @@ export default class Service {
     return this.d['name']
   }
 
-  address() {
-    const h = this.d['place']['current_house_number']
-    const s = this.d['place']['current_street']
-    const z = this.d['place']['current_zip']
+  place() {
+    if (!this.placeObject) {
+      this.placeObject = new Place(this.d['place'])
+    }
 
-    return [h, s, z].filter(e => !!e).join(' ')
+    return this.placeObject
+  }
+
+  address() {
+    return this.place().address()
   }
 
   geo() {
-    const lat = this.d['place']['latitude']
-    const lng = this.d['place']['longitude']
-
-    return [lat, lng]
+    return this.place().geo()
   }
 
   hierarchy() {
@@ -51,20 +52,15 @@ export default class Service {
     return this.d['place_id']
   }
 
-  placeName() {
-    return this.d['place']['name'] || ''
-  }
-
   hasImage() {
     return !!this.d['image']
   }
 
+  placeName() {
+    return this.place().name()
+  }
+
   imageUrl() {
-    if (!this.d['place']['image']) return null
-
-    let base = config().image_path
-    if (!base.startsWith('http')) base = `${config().root_url}${base}`
-
-    return `${base}/${this.placeId()}.jpg`
+    return this.place().imageUrl()
   }
 }
