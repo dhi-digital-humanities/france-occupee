@@ -129,7 +129,7 @@ setup()
 
 // actions
 
-const matchesTerms = (target, actual) => {
+const matchesTerm = (target, actual) => {
   if (!target) return true
   if (!actual) return false
 
@@ -142,6 +142,15 @@ const matchesTerms = (target, actual) => {
   }
 
   return false
+}
+
+const matchesTerms = (target, actual) => {
+  if (!target || target.length === 0) return true
+  if (!actual) return false
+
+  const terms = target.split(/\s|-/)
+
+  return terms.every(t => matchesTerm(t, actual))
 }
 
 const matchesIds = (target, actual) => {

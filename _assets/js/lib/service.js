@@ -21,7 +21,10 @@ export default class Service {
   }
 
   name() {
-    return this.d['name']
+    const n = this.d['name']
+    if (!n || n === '') return null
+
+    return n.replace(/^\s*-\s*/, '')
   }
 
   place() {
