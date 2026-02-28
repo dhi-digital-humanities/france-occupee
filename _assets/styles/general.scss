@@ -357,3 +357,11 @@
     text-align: right;
   }
 }
+
+[is='fav-control'] {
+  svg.active {
+    path {
+      fill: black;
+    }
+  }
+}
