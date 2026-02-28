@@ -19,16 +19,24 @@ function fo-import {
 }
 
 function fo-deploy {
-    export ROOT_URL="https://www.adresses-france-occupee.fr/"
+    export ROOT_URL="https://static.dhi-paris.fr/fo"
     export APP_ENV=production
+    export PMTILES_URL="https://static.dhi-paris.fr/The6dei1/20251217.pmtiles"
 
     npm run build
 
-    rsync -av --progress \
+    rsync -av \
     ./_site/ \
-    app@prod.server.dhip-paris.fr:/some/path/
+    app@static.dhi-paris.fr:/var/storage/host/static/current/fo/
 
-    rsync -av --progress --inplace ./data/tiles/ app@prod.server.dhip-paris.fr:/some/path/
+    rsync -av \
+    ./assets/loader.js \
+    app@static.dhi-paris.fr:/var/storage/host/static/current/fo/loader.js
+
+    # temporary: deploy loader script also to wendig
+    rsync -av \
+    ./assets/loader.js \
+    app@prime.wendig.io:/var/storage/host/static/current/private/Ohd7eita/app.js
 }
 
 fo-$1

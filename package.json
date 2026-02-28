@@ -34,7 +34,7 @@
     "build-11ty": "bash -c \"APP_ENV=production npx @11ty/eleventy\"",
     "build-js": "bash -c \"APP_ENV=production rollup -c --environment APP_ENV:production\"",
     "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
-    "deploy": "node bin/fo.js deploy",
-    "import": "node bin/fo.js import"
+    "deploy": "bin/fo.sh deploy",
+    "import": "bin/fo.sh import"
   }
 }
