@@ -8,7 +8,7 @@ const setup = () => {
   document.querySelector('head').append(style)
 
   const app = util.createElement('<div is="app"></div>')
-  document.querySelector('main').append(app)
+  document.querySelector('main > .container').append(app)
 
   let script = document.createElement('script')
   script.setAttribute('src', `${root_url}/assets/app.js`)
