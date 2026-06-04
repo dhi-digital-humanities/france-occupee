@@ -7,17 +7,19 @@ import nodePolyfills from 'rollup-plugin-polyfill-node'
 import replace from '@rollup/plugin-replace'
 import dotenv from 'dotenv'
 dotenv.config()
-// import {default as rpd} from "rollup-plugin-dotenv"
+
+const APP_ENV = process.env['APP_ENV'] || 'development'
 
 const envReplacements = {
   preventAssignment: true,
-  'process.env.APP_ENV': JSON.stringify(process.env.APP_ENV),
+  'process.env.APP_ENV': JSON.stringify(APP_ENV),
   'process.env.ROOT_URL': JSON.stringify(process.env.ROOT_URL),
   'process.env.IMAGE_PATH': JSON.stringify(process.env.IMAGE_PATH || ''),
-  'process.env.PMTILES_URL': JSON.stringify(process.env.PMTILES_URL)
+  'process.env.PMTILES_URL': JSON.stringify(process.env.PMTILES_URL),
+  'process.env.MATOMO_URL': JSON.stringify(process.env.MATOMO_URL),
+  'process.env.MATOMO_SITE_ID': JSON.stringify(process.env.MATOMO_SITE_ID)
 };
 
-const APP_ENV = process.env['APP_ENV'] || 'development'
 const optimize = (APP_ENV == 'production')
 
 const app = {

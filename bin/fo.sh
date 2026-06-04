@@ -22,6 +22,8 @@ function fo-deploy {
     export ROOT_URL="https://static.dhi-paris.fr/fo"
     export APP_ENV=production
     export PMTILES_URL="https://static.dhi-paris.fr/The6dei1/20251217.pmtiles"
+    export MATOMO_URL="https://visits.maxweberstiftung.de"
+    export MATOMO_SITE_ID="4"
 
     npm run build
 

@@ -15,32 +15,29 @@
 [is='standalone'] {
   header {
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 
     font-family: ayumi;
     font-size: 13px;
 
     .logo {
-      width: 450px;
+      width: 350px;
       text-transform: uppercase;
 
-      .dhip {
-        margin-top: -3px;
-
-        .de {
-          color: fo.$orange;
-          padding-left: 10px;
-        }
-
-        .fr {
-          padding-left: 155px;
-        }
+      img {
+        width: 100%;
+        margin-left: -7px;
       }
     }
 
     .page-title {
-      margin-top: 20px;
+      // margin-top: 20px;
+
       h1 {
+        .subtitle {
+          color: gray;
+          font-size: 0.7em;
+        }
         font-size: 24px;
         font-weight: bold;
       }
