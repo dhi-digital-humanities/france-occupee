@@ -34,9 +34,10 @@
         "information": "informations",
         "services": "services",
         "dhip": "Institut Historique Allemand",
-        "about": "Projektbeschreibung",
-        "contact": "Kontakt",
-        "imprint": "Impressum"
+        "about": "description du projet",
+        "contact": "contact",
+        "privacy": "protection des données",
+        "imprint": "mentions légales"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
@@ -73,8 +74,9 @@
         "information": "Information",
         "services": "Dienststellen",
         "dhip": "Deutsches Historisches Institut Paris",
-        "about": "description du projet",
-        "contact": "contact",
-        "imprint": "mentions légales"
+        "about": "Projektbeschreibung",
+        "contact": "Kontakt",
+        "privacy": "Datenschutz",
+        "imprint": "Impressum"
     }
 }

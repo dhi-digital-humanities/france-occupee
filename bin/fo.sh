@@ -29,14 +29,14 @@ function fo-deploy {
     ./_site/ \
     app@static.dhi-paris.fr:/var/storage/host/static/current/fo/
 
-    rsync -av \
-    ./assets/loader.js \
-    app@static.dhi-paris.fr:/var/storage/host/static/current/fo/loader.js
+    # rsync -av \
+    # ./assets/loader.js \
+    # app@static.dhi-paris.fr:/var/storage/host/static/current/fo/loader.js
 
     # temporary: deploy loader script also to wendig
-    rsync -av \
-    ./assets/loader.js \
-    app@prime.wendig.io:/var/storage/host/static/current/private/Ohd7eita/app.js
+    # rsync -av \
+    # ./assets/loader.js \
+    # app@prime.wendig.io:/var/storage/host/static/current/private/Ohd7eita/app.js
 }
 
 fo-$1

@@ -2,7 +2,7 @@
   <div class="container-fluid p-5">
     <header class="d-flex">
       <div class="logo d-flex">
-        <a href="/" class="pull-left">
+        <a href={urls()['home']} class="pull-left">
           <img src="{config().root_url}/assets/images/logo.jpg">
         </a>
 
@@ -20,9 +20,10 @@
       </div>
 
       <div class="navigation">
-        <a href="http://www.dhi-paris.fr/fr/externe-projekte/adresses-france-occupee/description-du-projet.html">{cap(t('about'))}</a> |
-        <a href="http://www.dhi-paris.fr/fr/institut/contact.html">{cap(t('contact'))}</a> |
-        <a href="http://www.dhi-paris.fr/fr/externe-projekte/adresses-france-occupee/mentions-legales.html">{cap(t('imprint'))}</a> |
+        <a href={urls()['about']}>{cap(t('about'))}</a> |
+        <a href={urls()['contact']}>{cap(t('contact'))}</a> |
+        <a href={urls()['imprint']}>{cap(t('imprint'))}</a> |
+        <a href={urls()['privacy']}>{cap(t('privacy'))}</a> |
         <div is="locale-toggle" />
       </div>
     </header>
@@ -48,18 +49,24 @@
       }
 
       urls() {
-        return {
+        const data = {
           de: {
-            contact: 'https://www.dhi-paris.fr/fr/institut/contact.html',
-            imprint: 'https://www.dhi-paris.fr/fr/mentions-legales-2.html',
-            privacy: 'https://www.dhi-paris.fr/fr/protection-des-donnees-1.html'
+            about: 'https://www.dhi-paris.fr/de/projektbeschreibung.html',
+            contact: 'https://www.dhi-paris.fr/de/institut/kontakt.html',
+            imprint: 'https://www.dhi-paris.fr/de/footer-navigation/impressum.html',
+            privacy: 'https://www.dhi-paris.fr/de/footer-navigation/datenschutz.html',
+            home: 'https://www.dhi-paris.fr/de/home.html'
           },
           fr: {
+            about: 'https://www.dhi-paris.fr/fr/externe-projekte/adresses-france-occupee/description-du-projet.html',
             contact: 'https://www.dhi-paris.fr/fr/institut/contact.html',
             imprint: 'https://www.dhi-paris.fr/fr/mentions-legales-2.html',
-            privacy: 'https://www.dhi-paris.fr/fr/protection-des-donnees-1.html'
+            privacy: 'https://www.dhi-paris.fr/fr/protection-des-donnees-1.html',
+            home: 'https://www.dhi-paris.fr/fr/page-daccueil.html'
           }
         }
+
+        return data[i18n.locale]
       }
     }
   </script>
