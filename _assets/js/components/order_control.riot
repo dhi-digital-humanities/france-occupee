@@ -28,6 +28,10 @@
         state.fields = props.fields
       }
 
+      onBeforeUpdate(props, state) {
+        state.fields = props.fields
+      }
+
       existing() {
         const getter = this.props.existing || (() => {
           const url = Url.current()

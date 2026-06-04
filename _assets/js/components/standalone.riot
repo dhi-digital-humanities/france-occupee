@@ -1,0 +1,66 @@
+<standalone>
+  <div class="container-fluid p-5">
+    <header class="d-flex">
+      <div class="logo d-flex">
+        <a href="/" class="pull-left">
+          <img src="{config().root_url}/assets/images/logo.jpg">
+        </a>
+
+        <div class="dhip">
+          <div class="de">{dhip('de')}</div>
+          <div class="fr">{dhip('fr')}</div>
+        </div>
+      </div>
+      
+      <div class="page-title">
+        <h1>
+          {cap(t('site_title'))} -
+          {cap(t('site_subtitle'))}
+        </h1>
+      </div>
+
+      <div class="navigation">
+        <a href="http://www.dhi-paris.fr/fr/externe-projekte/adresses-france-occupee/description-du-projet.html">{cap(t('about'))}</a> |
+        <a href="http://www.dhi-paris.fr/fr/institut/contact.html">{cap(t('contact'))}</a> |
+        <a href="http://www.dhi-paris.fr/fr/externe-projekte/adresses-france-occupee/mentions-legales.html">{cap(t('imprint'))}</a> |
+        <div is="locale-toggle" />
+      </div>
+    </header>
+
+    <div is="app" />
+  </div>
+
+  <script>
+    import {i18n, util} from '@wendig/lib'
+
+    export default class {
+      onMounted() {
+        this.on('locale-changed', event => this.update())
+      }
+
+      dhip(locale) {
+        const old = i18n.locale
+        i18n.setLocale(locale)
+        const result = util.capitalize(i18n.translate('dhip'))
+        i18n.setLocale(old)
+
+        return result
+      }
+
+      urls() {
+        return {
+          de: {
+            contact: 'https://www.dhi-paris.fr/fr/institut/contact.html',
+            imprint: 'https://www.dhi-paris.fr/fr/mentions-legales-2.html',
+            privacy: 'https://www.dhi-paris.fr/fr/protection-des-donnees-1.html'
+          },
+          fr: {
+            contact: 'https://www.dhi-paris.fr/fr/institut/contact.html',
+            imprint: 'https://www.dhi-paris.fr/fr/mentions-legales-2.html',
+            privacy: 'https://www.dhi-paris.fr/fr/protection-des-donnees-1.html'
+          }
+        }
+      }
+    }
+  </script>
+</standalone>

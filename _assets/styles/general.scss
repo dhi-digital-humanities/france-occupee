@@ -11,6 +11,62 @@
 
 // app styles
 
+
+[is='standalone'] {
+  header {
+    justify-content: space-between;
+    margin-bottom: 10px;
+
+    font-family: ayumi;
+    font-size: 13px;
+
+    .logo {
+      width: 450px;
+      text-transform: uppercase;
+
+      .dhip {
+        margin-top: -3px;
+
+        .de {
+          color: fo.$orange;
+          padding-left: 10px;
+        }
+
+        .fr {
+          padding-left: 155px;
+        }
+      }
+    }
+
+    .page-title {
+      margin-top: 20px;
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: end;
+
+      & > * {
+        margin: 0 5px;
+      }
+
+      a {
+        color: fo.$dark-gray;;
+        text-decoration: underline;
+      }
+
+      a[disabled] {
+        color: gray;
+        text-decoration: none;
+      }
+    }
+  }
+}
+
 [app-id='fo'] {
   font-family: ayumi;
   font-size: 14px;
@@ -123,8 +179,19 @@
     cursor: pointer;
   }
 
+  [is='results'] {
+    .tabs {
+      border-bottom: 1px solid #dddddd;
+
+      .nav-tabs {
+        border-bottom-width: 0;
+      }
+    }
+  }
+
   [is='world-map'] {
     position: relative;
+    margin-top: 10px;
     display: block;
     width: 100%;
     height: calc(100vh - 190px);

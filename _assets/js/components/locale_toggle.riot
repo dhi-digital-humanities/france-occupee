@@ -1,0 +1,32 @@
+<locale-toggle>
+    <a
+      href="#"
+      disabled={isLocale('fr')}
+      onclick={event => toLocale('fr', event)}
+    >FR</a>
+    /
+    <a
+      href="#"
+      disabled={isLocale('de')}
+      onclick={event => toLocale('de', event)}
+    >DE</a>
+  </div>
+
+  <script>
+    import {i18n} from '@wendig/lib'
+
+    export default class {
+      isLocale(locale) {
+        console.log(i18n.locale)
+        return (i18n.locale === locale)
+      }
+
+      toLocale(locale, event) {
+        event.preventDefault()
+
+        i18n.locale = locale
+        this.emit('locale-changed')
+      }
+    }
+  </script>
+</locale-toggle>

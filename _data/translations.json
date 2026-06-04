@@ -32,7 +32,11 @@
         "open_hierarchy_popup": "ouvir la pop-in de hiérarchies",
         "link_created": "Utilisez ce lien pour retrouver votre sélection :<br /><code>%{url}</code>",
         "information": "informations",
-        "services": "services"
+        "services": "services",
+        "dhip": "Institut Historique Allemand",
+        "about": "Projektbeschreibung",
+        "contact": "Kontakt",
+        "imprint": "Impressum"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
@@ -67,6 +71,10 @@
         "open_hierarchy_popup": "öffnen des Pop-In für die Hierarchie",
         "link_created": "Verwenden Sie diesen Link um auf Ihre Auswahl zuzugreifen:<br /><code>%{url}</code>",
         "information": "Information",
-        "services": "Dienststellen"
+        "services": "Dienststellen",
+        "dhip": "Deutsches Historisches Institut Paris",
+        "about": "description du projet",
+        "contact": "contact",
+        "imprint": "mentions légales"
     }
 }
