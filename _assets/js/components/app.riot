@@ -82,11 +82,12 @@
         delete p['page']
         p['perPage'] = 'max'
         p['onlyGeo'] = true
+        p['placeStatus'] = 'visible'
         promises.push(search.servicesMap(p))
 
         Promise.all(promises).then(datas => {
           const [data, mapData] = datas
-          
+
           this.update({data, mapData})
           this.bus.emit('new-results')
         })

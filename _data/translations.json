@@ -37,7 +37,8 @@
         "about": "description du projet",
         "contact": "contact",
         "privacy": "protection des données",
-        "imprint": "mentions légales"
+        "imprint": "mentions légales",
+        "country": "pays"
     },
     "de": {
         "site_title": "Frankreich unter deutscher Besatzung 1940–1945",
@@ -77,6 +78,7 @@
         "about": "Projektbeschreibung",
         "contact": "Kontakt",
         "privacy": "Datenschutz",
-        "imprint": "Impressum"
+        "imprint": "Impressum",
+        "country": "Land"
     }
 }

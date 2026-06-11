@@ -17,8 +17,8 @@ export default class Search extends WendigSearch {
     super(url)
   }
 
-  place(id) {
-    return this.postMessage({action: 'place', criteria: {id}}).then(data => {
+  place(criteria = {}) {
+    return this.postMessage({action: 'place', criteria}).then(data => {
       data['place'] = new Place(data['place'])
       data['services'] = data['services'].map(r => new Service(r))
 

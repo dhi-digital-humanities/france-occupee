@@ -72,6 +72,7 @@
     import config from '../../../_data/config'
     import search from '../lib/search.instance'
     import {paginate} from '../lib/util'
+    import {Url} from '@wendig/lib'
 
     export default class {
       onBeforeMount() {
@@ -120,7 +121,17 @@
       }
 
       async loadPlace(placeId) {
-        search.place(placeId).then(data => {
+        let criteria = {
+          id: placeId,
+          status: 'visible',
+        }
+
+        const url = Url.current()
+        const p = url.hashParams()
+
+        if (p['years']) criteria['years'] = p['years']
+
+        search.place(criteria).then(data => {
           const place = data['place']
           const services = data['services']
 

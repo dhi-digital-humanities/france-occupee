@@ -181,7 +181,8 @@
           parentId: this.parentId(),
           country: this.props['country'],
           onlyParents: true,
-          perPage: 'max'
+          perPage: 'max',
+          status: 'visible'
         }
 
         search.services(params).then(data => {

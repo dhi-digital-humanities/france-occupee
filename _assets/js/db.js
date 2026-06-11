@@ -133,7 +133,8 @@ const matchesTerm = (target, actual) => {
   if (!target) return true
   if (!actual) return false
 
-  const r = new RegExp(target, 'i')
+  const rEsc = RegExp.escape(target)
+  const r = new RegExp("(^|\\s|\\()" + rEsc + "($|\\s|\\))", 'i')
   const actuals = (Array.isArray(actual) ? actual : [actual])
 
   for (const a of actuals) {
@@ -203,6 +204,26 @@ const matchesHierarchy = (hierarchy, record) => {
   return hierarchy[country]
 }
 
+const matchesAddress = (address, record) => {
+  if (!address) return true
+  if (!record['place']) return false
+
+  const parts = [
+    record['place']['current_street'],
+    record['place']['current_house_number'],
+    record['place']['current_zip'],
+    record['place']['current_city'],
+    record['place']['current_country'],
+    record['place']['former_street'],
+    record['place']['former_house_number'],
+    record['place']['former_zip'],
+    record['place']['former_city'],
+    record['place']['former_country']
+  ].filter(e => !!e).map(e => e.toString())
+
+  return matchesTerms(address, parts)
+}
+
 const hasGeo = (record) => {
   if (!record['place']) return false
   if (!record['place']['latitude']) return false
@@ -222,8 +243,10 @@ const dig = (obj, chain = []) => {
   return result
 }
 
-const findServices = (criteria) => {
-  return Object.values(storage['services']).filter(record => {
+const findServices = (criteria, basis=null) => {
+  const services = basis || Object.values(storage['services'])
+
+  return services.filter(record => {
     if (!matchesIds(criteria['id'], record['id'])) return false
 
     const isParent = ((record['child_ids'] || []).length > 0)
@@ -239,8 +262,7 @@ const findServices = (criteria) => {
     const city = dig(record, ['place', 'current_city'])
     if (!matchesTerms(criteria['city'], city)) return false
 
-    const address = dig(record, ['place', 'current_street'])
-    if (!matchesTerms(criteria['address'], address)) return false
+    if (!matchesAddress(criteria['address'], record)) return false
 
     const organization = record['hierarchy']
     if (!matchesTerms(criteria['organization'], organization)) return false
@@ -253,6 +275,9 @@ const findServices = (criteria) => {
 
     const status = record['status']
     if (!matchesExactly(criteria['status'], status)) return false
+
+    const placeStatus = dig(record, ['place', 'status'])
+    if (!matchesExactly(criteria['placeStatus'], placeStatus)) return false
 
     if (!criteria['fav']) {
       const fts = record['fts']
@@ -316,7 +341,14 @@ database.action('place', data => {
   const place = storage['places'][placeId]
   const services = storage['servicesByPlaceId'][placeId]
 
-  return {place, services}
+  delete criteria['id']
+  const filtered = findServices(criteria, services)
+  const sorted = util.sortBy(filtered, service => {
+    const source = service['source']
+    return source['edition_date'] || 'zzz'
+  })
+
+  return {place, services: sorted}
 })
 
 database.action('services-by-place', data => {
