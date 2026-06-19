@@ -56,9 +56,9 @@ onmessage = database.handler
 // }
 
 const setup = async () => {
-  const places = await fetch(`${config().root_url}/data/place.json`).then(r => r.json())
-  const sources = await fetch(`${config().root_url}/data/source.json`).then(r => r.json())
-  const services = await fetch(`${config().root_url}/data/service.json`).then(r => r.json())
+  const places = await fetch(`${config().root_url}/data/places.json`).then(r => r.json())
+  const sources = await fetch(`${config().root_url}/data/sources.json`).then(r => r.json())
+  const services = await fetch(`${config().root_url}/data/services.json`).then(r => r.json())
 
   // packTest(services)
 
@@ -87,9 +87,6 @@ const setup = async () => {
 
     // cleanup
     delete service['d_breadcrumb']
-    delete service['last_editor_basic_user_id']
-    delete service['filemaker_ids']
-    delete service['fts']
 
     // sort
     service['sort'] = {}
@@ -377,7 +374,7 @@ database.action('services-by-place', data => {
 const sortResults = (results, criteria) => {
   const c = criteria['sort'] || 'name'
 
-  const sorted = util.sortBy(results, r => r['sort'][c])
+  const sorted = util.sortBy(results, r => r[c])
   return reverse(sorted, criteria)
 }
 
