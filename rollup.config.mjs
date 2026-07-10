@@ -44,7 +44,7 @@ const database = {
   output: {
     file: 'assets/db.js',
     format: optimize ? 'iife' : 'esm',
-    sourcemap: !optimize
+    sourcemap: optimize ? false : 'inline'
   },
   plugins: [
     nodeResolve(),

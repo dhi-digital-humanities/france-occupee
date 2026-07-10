@@ -177,6 +177,8 @@
       }
 
       fetch() {
+        console.log(this.parentId())
+
         const params = {
           parentId: this.parentId(),
           country: this.props['country'],

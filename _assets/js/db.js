@@ -85,17 +85,18 @@ const setup = async () => {
     const place_id = service['place_id']
     service['place'] = storage['places'][place_id]
 
-    // cleanup
-    delete service['d_breadcrumb']
-
     // sort
     service['sort'] = {}
     service['sort']['name'] = fold(service['name'])
     let fts_data = [service['name']]
+    fts_data.push(service['comment'] || '')
+    // fts_data = fts_data.concat(service['d_breadcrumb'])
     if (service['place']) {
       fts_data.push(service['place']['name'])
       fts_data.push(service['place']['current_city'])
       fts_data.push(service['place']['current_street'])
+      fts_data.push(service['place']['former_city'])
+      fts_data.push(service['place']['former_street'])
 
       service['sort']['city'] = fold(service['place']['current_city'])
       service['sort']['address'] = fold(service['place']['current_address'])
@@ -104,6 +105,8 @@ const setup = async () => {
     service['sort']['fts'] = service['fts']
     service['sort']['date'] = service['date']
 
+    // cleanup
+    delete service['d_breadcrumb']
 
     // build hierarchy
     const parent_id = service['parent_service_id']
@@ -131,7 +134,7 @@ const matchesTerm = (target, actual) => {
   if (!actual) return false
 
   const rEsc = RegExp.escape(target)
-  const r = new RegExp("(^|\\s|\\()" + rEsc + "($|\\s|\\))", 'i')
+  const r = new RegExp("(^|\\s|\\(|-)" + rEsc + "($|\\s|\\)|-)", 'i')
   const actuals = (Array.isArray(actual) ? actual : [actual])
 
   for (const a of actuals) {
@@ -142,11 +145,26 @@ const matchesTerm = (target, actual) => {
   return false
 }
 
+const expandTerms = (terms) => {
+  const result = []
+
+  const expansions = {
+    'st.': ['saint']
+  }
+
+  for (const t of terms) {
+    result.push(...(expansions[t] || [t]))
+  }
+
+  return result
+}
+
 const matchesTerms = (target, actual) => {
   if (!target || target.length === 0) return true
   if (!actual) return false
 
-  const terms = target.split(/\s|-/)
+  const terms = expandTerms(target.split(/\s|-/))
+
 
   return terms.every(t => matchesTerm(t, actual))
 }
@@ -277,8 +295,7 @@ const findServices = (criteria, basis=null) => {
     if (!matchesExactly(criteria['placeStatus'], placeStatus)) return false
 
     if (!criteria['fav']) {
-      const fts = record['fts']
-      if (!matchesTerms(criteria['terms'], fts)) return false
+      if (!matchesTerms(criteria['terms'], record['fts'])) return false
       if (!matchesYears(criteria['years'], record)) return false
     }
 
@@ -417,11 +434,13 @@ const sanitizeCriteria = (input) => {
       split(/\s*,\s*/).
       map(y => parseInt(y))
   }
-  criteria['parentId'] = (
-    criteria['parentId'] ?
-    parseInt(criteria['parentId'] || -1) :
-    null
-  )
+  if (!Array.isArray(criteria['parentId'])) {
+    criteria['parentId'] = (
+      criteria['parentId'] ?
+      parseInt(criteria['parentId'] || -1) :
+      null
+    )
+  }
   if (criteria['hierarchy']) {
     const values = Object.values(criteria['hierarchy'])
 
