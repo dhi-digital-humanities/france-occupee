@@ -3,6 +3,7 @@ import {stringify} from 'csv-stringify/sync'
 import {indexBy, paginate as upaginate} from './lib/util'
 import {Database, util, i18n} from '@wendig/lib'
 import config from '../../_data/config'
+import * as ms from './lib/matchers'
 
 
 // init
@@ -59,6 +60,9 @@ const setup = async () => {
   const places = await fetch(`${config().root_url}/data/places.json`).then(r => r.json())
   const sources = await fetch(`${config().root_url}/data/sources.json`).then(r => r.json())
   const services = await fetch(`${config().root_url}/data/services.json`).then(r => r.json())
+  const thesaurus = await fetch(`${config().root_url}/data/thesaurus.json`).then(r => r.json())
+
+  ms.applyThesaurusData(thesaurus)
 
   // packTest(services)
 
@@ -95,8 +99,14 @@ const setup = async () => {
       fts_data.push(service['place']['name'])
       fts_data.push(service['place']['current_city'])
       fts_data.push(service['place']['current_street'])
+      fts_data.push(service['place']['current_house_number'])
+      fts_data.push(service['place']['current_zip'])
+      fts_data.push(service['place']['current_country'])
       fts_data.push(service['place']['former_city'])
       fts_data.push(service['place']['former_street'])
+      fts_data.push(service['place']['former_house_number'])
+      fts_data.push(service['place']['former_zip'])
+      fts_data.push(service['place']['former_country'])
 
       service['sort']['city'] = fold(service['place']['current_city'])
       service['sort']['address'] = fold(service['place']['current_address'])
@@ -129,123 +139,6 @@ setup()
 
 // actions
 
-const matchesTerm = (target, actual) => {
-  if (!target) return true
-  if (!actual) return false
-
-  const rEsc = RegExp.escape(target)
-  const r = new RegExp("(^|\\s|\\(|-)" + rEsc + "($|\\s|\\)|-)", 'i')
-  const actuals = (Array.isArray(actual) ? actual : [actual])
-
-  for (const a of actuals) {
-    if (!a) continue
-    if (a.match(r)) return true
-  }
-
-  return false
-}
-
-const expandTerms = (terms) => {
-  const result = []
-
-  const expansions = {
-    'st.': ['saint']
-  }
-
-  for (const t of terms) {
-    result.push(...(expansions[t] || [t]))
-  }
-
-  return result
-}
-
-const matchesTerms = (target, actual) => {
-  if (!target || target.length === 0) return true
-  if (!actual) return false
-
-  const terms = expandTerms(target.split(/\s|-/))
-
-
-  return terms.every(t => matchesTerm(t, actual))
-}
-
-const matchesIds = (target, actual) => {
-  if (!target) return true
-
-  return target.indexOf(actual) != -1
-}
-
-const matchesParentId = (target, actual) => {
-  if (!target) return true
-  if (target === -1) return !actual
-  if (!Array.isArray(target)) target = [target]
-
-  return target.indexOf(actual) != -1
-}
-
-const matchesExactly = (target, actual) => {
-  if (!target) return true
-
-  return target === actual
-}
-
-const matchesYears = (years, record) => {
-  if (!years) return true
-  const actual = dig(record, ['source', 'd_edition_year'])
-  if (!actual) return false
-
-  return years.indexOf(actual) != -1
-}
-
-const matchesHierarchy = (hierarchy, record) => {
-  if (!hierarchy) return true
-
-  let tracker = []
-  let r = record
-  while (!!r) {
-    if (r['id'] in hierarchy) {
-      const v = hierarchy[r['id']]
-
-      for (const t of tracker) hierarchy[t] = v
-
-      return v
-    }
-
-    tracker.push(r['parent_id'])
-    r = storage['services'][r['parent_id']]
-  }
-
-  const country = record['source']['country']
-  return hierarchy[country]
-}
-
-const matchesAddress = (address, record) => {
-  if (!address) return true
-  if (!record['place']) return false
-
-  const parts = [
-    record['place']['current_street'],
-    record['place']['current_house_number'],
-    record['place']['current_zip'],
-    record['place']['current_city'],
-    record['place']['current_country'],
-    record['place']['former_street'],
-    record['place']['former_house_number'],
-    record['place']['former_zip'],
-    record['place']['former_city'],
-    record['place']['former_country']
-  ].filter(e => !!e).map(e => e.toString())
-
-  return matchesTerms(address, parts)
-}
-
-const hasGeo = (record) => {
-  if (!record['place']) return false
-  if (!record['place']['latitude']) return false
-  if (!record['place']['longitude']) return false
-
-  return true
-}
 
 const dig = (obj, chain = []) => {
   let result = obj
@@ -262,41 +155,41 @@ const findServices = (criteria, basis=null) => {
   const services = basis || Object.values(storage['services'])
 
   return services.filter(record => {
-    if (!matchesIds(criteria['id'], record['id'])) return false
+    if (!ms.matchesIds(criteria['id'], record['id'])) return false
 
     const isParent = ((record['child_ids'] || []).length > 0)
     if (criteria['onlyParents'] && !isParent) return false
 
-    if (!matchesHierarchy(criteria['hierarchy'], record)) return false
+    if (!ms.matchesHierarchy(criteria['hierarchy'], record)) return false
 
-    if (criteria['onlyGeo'] && !hasGeo(record)) return false
+    if (criteria['onlyGeo'] && !ms.hasGeo(record)) return false
 
     const name = record['name']
-    if (!matchesTerms(criteria['name'], name)) return false
+    if (!ms.matchesAllTerms(criteria['name'], name)) return false
 
     const city = dig(record, ['place', 'current_city'])
-    if (!matchesTerms(criteria['city'], city)) return false
+    if (!ms.matchesAllTerms(criteria['city'], city)) return false
 
-    if (!matchesAddress(criteria['address'], record)) return false
+    if (!ms.matchesAddress(criteria['address'], record)) return false
 
     const organization = record['hierarchy']
-    if (!matchesTerms(criteria['organization'], organization)) return false
+    if (!ms.matchesAllTerms(criteria['organization'], organization)) return false
 
     const parentId = record['parent_id']
-    if (!matchesParentId(criteria['parentId'], parentId)) return false
+    if (!ms.matchesParentId(criteria['parentId'], parentId)) return false
 
     const country = dig(record, ['source', 'country'])
-    if (!matchesExactly(criteria['country'], country)) return false
+    if (!ms.matchesExactly(criteria['country'], country)) return false
 
     const status = record['status']
-    if (!matchesExactly(criteria['status'], status)) return false
+    if (!ms.matchesExactly(criteria['status'], status)) return false
 
     const placeStatus = dig(record, ['place', 'status'])
-    if (!matchesExactly(criteria['placeStatus'], placeStatus)) return false
+    if (!ms.matchesExactly(criteria['placeStatus'], placeStatus)) return false
 
     if (!criteria['fav']) {
-      if (!matchesTerms(criteria['terms'], record['fts'])) return false
-      if (!matchesYears(criteria['years'], record)) return false
+      if (!ms.matchesAllTerms(criteria['terms'], record['fts'])) return false
+      if (!ms.matchesYears(criteria['years'], record)) return false
     }
 
     return true
@@ -453,7 +346,7 @@ const sanitizeCriteria = (input) => {
 
   const toFold = ['name', 'city', 'address', 'organization', 'terms']
   for (const f of toFold) {
-    if (f in criteria) criteria[f] = fold(criteria[f])
+    if (f in criteria) criteria[f] = ms.tokenize(criteria[f])
   }
 
   return criteria

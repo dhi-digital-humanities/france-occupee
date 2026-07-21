@@ -37,6 +37,8 @@
       
       <div if={state.imageUrl} class="image-container">
         <img src={state.imageUrl} alt={state.placeName || 'Place image'} onerror={handleImageError} />
+
+        <div class="mt-3 text-center">{state.copyright}</div>
       </div>
     </div>
     
@@ -142,7 +144,8 @@
             address: place.address(),
             city: place.city(),
             placeName: place.name(),
-            imageUrl: place.imageUrl()
+            imageUrl: place.imageUrl(),
+            copyright: place.copyright()
           })
         })
       }

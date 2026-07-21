@@ -71,4 +71,18 @@ const loader = {
   ]
 }
 
-export default [app, database, loader]
+const tests = {
+  input: 'test/index.spec.js',
+  output: {
+    file: 'tmp/test.mjs',
+    format: 'es',
+    sourcemap: true
+  },
+  plugins: [
+    nodeResolve(),
+    commonjs(),
+    replace(envReplacements)
+  ]
+}
+
+export default [app, database, loader, tests]

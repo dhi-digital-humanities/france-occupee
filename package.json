@@ -34,6 +34,7 @@
     "build-11ty": "bash -c \"APP_ENV=production npx @11ty/eleventy\"",
     "build-js": "bash -c \"APP_ENV=production rollup -c --environment APP_ENV:production\"",
     "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
+    "test": "node --enable-source-maps --test --watch tmp/test.mjs",
     "deploy": "bin/fo.sh deploy",
     "import": "bin/fo.sh import"
   }

@@ -18,6 +18,7 @@
     oninput={event => onChange(event)}
     onfocus={event => onFocus(event)}
     onblur={evebt => onBlur(event)}
+    onkeydown={event => onKeyDown(event)}
   />
 
   <script>
@@ -56,6 +57,12 @@
         if (h) h(event)
 
         this.update({help: false})
+      }
+
+      onKeyDown(event) {
+        if (this.props.preventSubmit && event.key === 'Enter') {
+          event.preventDefault()
+        }
       }
 
       onHelpClick(event) {

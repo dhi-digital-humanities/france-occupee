@@ -58,11 +58,15 @@ export default class Place {
   }
 
   imageUrl() {
-    if (!this.d['image']) return null
+    if (!this.d['image_path']) return null
 
     let base = config().image_path
     if (!base.startsWith('http')) base = `${config().root_url}${base}`
 
     return `${base}/${this.id()}.jpg`
+  }
+
+  copyright() {
+    return this.d['image_copyright_title']
   }
 }
