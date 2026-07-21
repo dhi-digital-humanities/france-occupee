@@ -93,7 +93,7 @@ const setup = async () => {
     service['sort'] = {}
     service['sort']['name'] = fold(service['name'])
     let fts_data = [service['name']]
-    fts_data.push(service['comment'] || '')
+    // fts_data.push(service['comment'] || '')
     // fts_data = fts_data.concat(service['d_breadcrumb'])
     if (service['place']) {
       fts_data.push(service['place']['name'])
@@ -160,7 +160,7 @@ const findServices = (criteria, basis=null) => {
     const isParent = ((record['child_ids'] || []).length > 0)
     if (criteria['onlyParents'] && !isParent) return false
 
-    if (!ms.matchesHierarchy(criteria['hierarchy'], record)) return false
+    if (!ms.matchesHierarchy(criteria['hierarchy'], record, storage['services'])) return false
 
     if (criteria['onlyGeo'] && !ms.hasGeo(record)) return false
 

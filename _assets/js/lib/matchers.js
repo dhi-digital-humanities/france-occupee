@@ -109,7 +109,7 @@ const matchesYears = (years, record) => {
   return years.indexOf(actual) != -1
 }
 
-const matchesHierarchy = (hierarchy, record) => {
+const matchesHierarchy = (hierarchy, record, services) => {
   if (!hierarchy) return true
 
   let tracker = []
@@ -124,7 +124,7 @@ const matchesHierarchy = (hierarchy, record) => {
     }
 
     tracker.push(r['parent_id'])
-    r = storage['services'][r['parent_id']]
+    r = services[r['parent_id']]
   }
 
   const country = record['source']['country']
