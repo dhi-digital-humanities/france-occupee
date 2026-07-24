@@ -39,9 +39,9 @@
     >
       <img src="{config().root_url}/assets/images/pagination/05.png" />
     </a>
-
-    <div class="indicator">{xToYofT()}</div>
   </template>
+
+  <div class="indicator">{xToYofT()}</div>
 
   <script>
     import config from '../../../_data/config'
@@ -113,8 +113,8 @@
 
       xToYofT() {
         const result = this.t('results_x_to_y_of_t', {
-          x: (this.props.page - 1) * this.props.perPage + 1,
-          y: this.props.page * this.props.perPage,
+          x: Math.min((this.props.page - 1) * this.props.perPage + 1, this.props.total),
+          y: Math.min(this.props.page * this.props.perPage, this.props.total),
           t: this.props.total
         })
 

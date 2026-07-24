@@ -1,6 +1,6 @@
 import {stringify} from 'csv-stringify/sync'
 
-import {indexBy, paginate as upaginate} from './lib/util'
+import {indexBy, paginate as upaginate, log} from './lib/util'
 import {Database, util, i18n} from '@wendig/lib'
 import config from '../../_data/config'
 import * as ms from './lib/matchers'
@@ -155,6 +155,13 @@ const findServices = (criteria, basis=null) => {
   const services = basis || Object.values(storage['services'])
 
   return services.filter(record => {
+    if (record['id'] === 9603) {
+      log(true)
+    } else {
+      log(false)
+    }
+    log(record)
+
     if (!ms.matchesIds(criteria['id'], record['id'])) return false
 
     const isParent = ((record['child_ids'] || []).length > 0)

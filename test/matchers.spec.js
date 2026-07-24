@@ -20,6 +20,7 @@ test('tokenization', () => {
 
 test('term expansion with thesaurus', () => {
   assert.deepEqual(ms.expand(['st.', 'germain']), ['st.', 'saint', 'germain'])
+  assert.deepEqual(ms.expand(['ecole']), ['ecole', 'schule'])
 })
 
 test('term matching (any)', () => {
@@ -38,8 +39,4 @@ test('term matching (any)', () => {
 
   assert(!ms.matchesAnyTerms('rma', 'Saint Germain'))
   assert(!ms.matchesAnyTerms('pan', 'Japanisch-Kaiserliche Marine'))
-})
-
-test('term matching (multiple)', () => {
-
 })

@@ -1,8 +1,9 @@
 import {util} from '@wendig/lib'
+import {log} from './util'
 
 let thesaurus = {}
-const cache = new Map()
 
+const cache = new Map()
 const fetch = (key, retrieve) => {
   if (!cache.has(key)) cache.set(key, retrieve())
 
@@ -11,7 +12,7 @@ const fetch = (key, retrieve) => {
 
 const applyThesaurusData = (data) => {
   for (const terms of data) {
-    const tokenized = tokenize(terms)
+    const tokenized = tokenize(terms.map(t => tokenize(t))).flat()
 
     for (const t1 of tokenized) {
       for (const t2 of tokenized) {
@@ -62,6 +63,11 @@ const matchesAnyTerms = (target, actual) => {
 
     return [start, end]
   })
+
+  log(targetTokenized)
+  log(actual)
+  log(actualExpanded)
+  log(targetPatterns)
 
   for (const a of actualExpanded) {
     if (!a) continue
@@ -147,10 +153,6 @@ const matchesAddress = (address, record) => {
     record['place']['former_city'],
     record['place']['former_country']
   ].filter(e => !!e).map(e => e.toString()).join(' ')
-
-  if (record['id'] === 8287) {
-    console.log(address, record, parts)
-  }
 
   return matchesAllTerms(address, parts)
 }

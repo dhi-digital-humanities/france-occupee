@@ -1,5 +1,7 @@
 import {Url} from '@wendig/lib'
 
+let logging = false
+
 const detectLocale = () => {
   const url = Url.current()
   const parts = url.path().match(/^\/(de|fr|en)(\/.*|$)/)
@@ -36,8 +38,25 @@ const paginate = (items, perPage, page) => {
   return items.slice(start, start + perPage)
 }
 
+const log = (...args) => {
+  if (args.length === 1) {
+    if (args[0] === true) {
+      logging = true
+      return
+    }
+
+    if (args[0] === false) {
+      logging = false
+      return
+    }
+  }
+  
+  if (logging) console.log(...args)
+}
+
 export {
   detectLocale,
   indexBy,
-  paginate
+  paginate,
+  log
 }
