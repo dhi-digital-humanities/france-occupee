@@ -8,6 +8,10 @@ dotenv.config()
 export default async function(ec) {
   ec.setServerPassthroughCopyBehavior("passthrough")
 
+  // test/ holds build-time tooling (rollup spec entry, benchmark harness), not
+  // site content — nothing there should end up in _site/
+  ec.ignores.add('test/')
+
   ec.addPassthroughCopy('assets')
   ec.addPassthroughCopy('data')
   ec.addPassthroughCopy({"_data/translations.json": "data/translations.json"})

@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fs-bench — stemming &amp; fuzzy search benchmark</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --panel: #1c1f26;
+    --line: #2b303a;
+    --fg: #e6e8ec;
+    --dim: #99a0ad;
+    --accent: #7aa2f7;
+    --bad: #f7768e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 4px; color: var(--accent); }
+  h3 { font-size: 12px; margin: 22px 0 8px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
+  p { margin: 6px 0; color: var(--dim); }
+  code { color: var(--fg); }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+  .corpus-note { margin: 0 0 10px; color: var(--dim); }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0 18px; }
+  button {
+    background: #262b34; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 14px; font: inherit; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; white-space: nowrap; padding-right: 18px; }
+  td.note { color: var(--dim); }
+  tr.total td { font-weight: 700; border-top: 1px solid var(--accent); border-bottom: none; }
+  .env { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; color: var(--dim); }
+  .env b { color: var(--fg); font-weight: 400; }
+  ul.samples { list-style: none; padding: 0; margin: 6px 0 0; }
+  ul.samples li { padding: 1px 0; color: var(--dim); }
+  ul.samples li span { color: var(--fg); }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  pre.err { color: var(--bad); }
+  #status { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>fs-bench</h1>
+  <p>
+    Stemming via <code>multilingual-stemmer@2.1.1</code> (WASM) and fuzzy search via
+    <code>fuse.js@7.1.0</code>, both from unpkg. Corpora are built from
+    <code>data/services.json</code> + <code>data/sources.json</code> by
+    <code>node test/benchmark/build-fs-bench.mjs</code>; place strings are excluded.
+    Everything runs on the main thread on purpose, so the absolute numbers include
+    whatever UI blocking they cause.
+  </p>
+
+  <div class="panel">
+    <h3>Environment</h3>
+    <div class="env" id="env"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="primary" id="run-all">Run all</button>
+    <button data-run="de">Run de</button>
+    <button data-run="fr">Run fr</button>
+    <button id="copy">Copy results JSON</button>
+    <button id="reset">Reset</button>
+    <span id="status"></span>
+  </div>
+
+  <div id="results"></div>
+
+</div>
+
+<script type="module">
+import {stem, Languages} from 'https://unpkg.com/multilingual-stemmer@2.1.1/dist/index.browser.js'
+import Fuse from 'https://unpkg.com/fuse.js@7.1.0/dist/fuse.min.mjs'
+
+const STEMMER_URL = 'https://unpkg.com/multilingual-stemmer@2.1.1/dist/index.browser.js'
+const FUSE_URL = 'https://unpkg.com/fuse.js@7.1.0/dist/fuse.min.mjs'
+
+const ITERATIONS = 3
+const WARMUP_TOKENS = 2000
+const SEARCH_LIMIT = 10
+const TOP_RESULTS = 3
+
+// section 5 sweeps Fuse's two distance knobs. threshold is Fuse's fuzzy distance
+// (0 = exact, 1 = match anything) and ignoreLocation drops the requirement that
+// a match start near position 0. 0.6 is Fuse's default and is kept in the sweep
+// so the "before" case is in the same table.
+const SWEEP_THRESHOLDS = [0.2, 0.3, 0.4, 0.6]
+const SWEEP_IGNORE_LOCATIONS = [false, true]
+const SWEEP_MATCH_LIMIT = 200
+
+// fuse.js 7.1.0 dist/fuse.mjs defaults, quoted in the report so the "before"
+// numbers are not mistaken for a tuned config
+const FUSE_DEFAULTS = {threshold: 0.6, ignoreLocation: false}
+
+const CORPUS = [
+  {
+    key: 'de',
+    file: './fs_bench.de.json',
+    lang: Languages.German,
+    langName: 'German',
+    queries: [
+      'Offiziersunterkunft',
+      'Feldgendarmerie',
+      'Wohnnug',
+      'Sanitätsdienststell'
+    ],
+    // the sweep is 16 searches per corpus per list, so it uses one exact and
+    // one typo query instead of all four
+    sweepQueries: ['Offiziersunterkunft', 'Wohnnug']
+  },
+  {
+    key: 'fr',
+    file: './fs_bench.fr.json',
+    lang: Languages.French,
+    langName: 'French',
+    queries: [
+      'Mairie de Tulle',
+      'Intendance régionale de police',
+      'Mairie de Tarnnos',
+      'Bottin administratif État Français 1941'
+    ],
+    sweepQueries: ['Mairie de Tulle', 'Mairie de Tarnnos']
+  }
+]
+
+// mirrors util.fold in node_modules/@wendig/lib/src/util.js:135, which db.js
+// applies to every searchable string before matching
+const fold = value => value === undefined || value === null
+  ? value
+  : String(value).trim().toLowerCase().
+      replaceAll(/[äáàâå]/g, 'a').
+      replaceAll(/[öóòôðø]/g, 'o').
+      replaceAll(/[iíìî]/g, 'i').
+      replaceAll(/[ëéèê]/g, 'e').
+      replaceAll(/[üúùû]/g, 'u').
+      replaceAll(/[ÿ]/g, 'y').
+      replaceAll(/[ćč]/g, 'c').
+      replaceAll(/[ł]/g, 'l').
+      replaceAll(/[śš]/g, 's').
+      replaceAll(/[ż]/g, 'z').
+      replaceAll(/æ/g, 'ae').
+      replaceAll(/ß/g, 'ss')
+
+// same split as tokenize() in _assets/js/lib/matchers.js:36
+const tokenize = string => fold(string).split(/[\s\-]+/).filter(Boolean)
+
+const stemMemo = new Map()
+const stemToken = (lang, token) => {
+  let memo = stemMemo.get(lang)
+  if (!memo) stemMemo.set(lang, memo = new Map())
+  if (!memo.has(token)) memo.set(token, stem(lang, token))
+  return memo.get(token)
+}
+const stemText = (lang, string) => tokenize(string).map(t => stemToken(lang, t)).join(' ')
+
+const raf = () => new Promise(resolve => requestAnimationFrame(resolve))
+
+const fmt = value => typeof value === 'number'
+  ? value.toLocaleString('en-US', {maximumFractionDigits: 1})
+  : String(value)
+
+const median = values => {
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = sorted.length >> 1
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+const perSecond = (count, ms) => Math.round(count / (ms / 1000))
+
+const report = {env: {}, corpora: {}}
+const resultsEl = document.getElementById('results')
+const statusEl = document.getElementById('status')
+
+const el = (tag, className, text) => {
+  const node = document.createElement(tag)
+  if (className) node.className = className
+  if (text !== undefined) node.textContent = text
+  return node
+}
+
+// small view helper: one section heading + one table + rows, appended as we go
+// so the page paints between steps (each step itself still blocks the thread)
+const panel = (title, subtitle) => {
+  const node = el('div', 'panel')
+  node.append(el('h2', null, title))
+  if (subtitle) node.append(el('p', 'corpus-note', subtitle))
+  resultsEl.append(node)
+
+  const heading = text => node.append(el('h3', null, text))
+
+  const table = () => {
+    const t = el('table')
+    const head = el('tr')
+    head.append(
+      el('th', null, 'metric'),
+      el('th', 'num', 'ms (median)'),
+      el('th', 'num', 'ms (min)'),
+      el('th', null, 'note')
+    )
+    t.append(head)
+    node.append(t)
+    return t
+  }
+
+  const cells = tr => [...tr.children].slice(1, 3)
+
+  // detail, when given, becomes a dimmed full-width row right below this one
+  const detailRow = (t, span, detail) => {
+    const tr = el('tr')
+    const cell = el('td', 'note', detail)
+    cell.colSpan = span
+    tr.append(cell)
+    t.append(tr)
+    return tr
+  }
+
+  const row = (t, metric, runs, note, detail) => {
+    const tr = el('tr')
+    tr.append(
+      el('td', null, metric),
+      el('td', 'num', runs ? fmt(median(runs)) : '-'),
+      el('td', 'num', runs ? fmt(Math.min(...runs)) : '-'),
+      el('td', 'note', note || '')
+    )
+    t.append(tr)
+    if (detail !== undefined) detailRow(t, 4, detail)
+    return tr
+  }
+
+  const totalRow = (t, metric, ms, note) => {
+    const tr = row(t, metric, null, note)
+    tr.classList.add('total')
+    for (const cell of cells(tr)) cell.textContent = fmt(ms)
+    return tr
+  }
+
+  const note = text => node.append(el('p', 'corpus-note', text))
+
+  // for the sweep, where one row is one (ignoreLocation, threshold, query) cell
+  const grid = headers => {
+    const t = el('table')
+    const head = el('tr')
+    for (const header of headers) head.append(el('th', null, header))
+    t.append(head)
+    node.append(t)
+    return (cells, detail) => {
+      const tr = el('tr')
+      for (const cell of cells) tr.append(el('td', null, String(cell)))
+      t.append(tr)
+      if (detail !== undefined) detailRow(t, headers.length, detail)
+      return tr
+    }
+  }
+
+  const samples = pairs => {
+    const list = el('ul', 'samples')
+    for (const [before, after] of pairs) {
+      const li = el('li')
+      li.append(document.createTextNode(before), document.createTextNode(' → '), el('span', null, after))
+      list.append(li)
+    }
+    node.append(list)
+  }
+
+  return {node, heading, table, row, totalRow, note, grid, samples}
+}
+
+const time = fn => {
+  const start = performance.now()
+  const value = fn()
+  return {ms: performance.now() - start, value}
+}
+
+// runs fn ITERATIONS times, returns every run plus the last return value
+const repeat = (fn, iterations = ITERATIONS) => {
+  const runs = []
+  let value
+  for (let i = 0; i < iterations; i++) {
+    const run = time(fn)
+    runs.push(run.ms)
+    value = run.value
+  }
+  return {runs, median: median(runs), min: Math.min(...runs), value}
+}
+
+const loadCorpus = async file => {
+  const t0 = performance.now()
+  const response = await fetch(file)
+  const fetchMs = performance.now() - t0
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} for ${file} — run: node test/benchmark/build-fs-bench.mjs`)
+  }
+  const t1 = performance.now()
+  const text = await response.text()
+  const bodyMs = performance.now() - t1
+  const t2 = performance.now()
+  const strings = JSON.parse(text)
+  const parseMs = performance.now() - t2
+  const bytes = Number(response.headers.get('content-length')) || new Blob([text]).size
+  return {strings, bytes, fetchMs, bodyMs, parseMs}
+}
+
+async function runCorpus(corpus) {
+  const ui = panel(`fs_bench.${corpus.key}.json — ${corpus.langName}`)
+  const out = {corpus: corpus.key, lang: corpus.langName, file: corpus.file}
+
+  statusEl.textContent = `${corpus.key}: loading…`
+  await raf()
+
+  // 1. load ---------------------------------------------------------------
+  ui.heading('1. load the corpus file')
+  const lt = ui.table()
+
+  const loaded = await loadCorpus(corpus.file)
+  const {strings} = loaded
+  const chars = strings.reduce((sum, string) => sum + string.length, 0)
+
+  ui.row(lt, 'fetch (network + headers)', [loaded.fetchMs], 'cold on run 1, warm afterwards')
+  ui.row(lt, 'read body to text', [loaded.bodyMs])
+  ui.row(lt, 'JSON.parse', [loaded.parseMs])
+  ui.totalRow(lt, 'total load', loaded.fetchMs + loaded.bodyMs + loaded.parseMs)
+  ui.note(`${fmt(strings.length)} strings · ${fmt(chars)} chars · ${(loaded.bytes / 1048576).toFixed(2)} MB`)
+  await raf()
+
+  out.load = {
+    strings: strings.length,
+    chars,
+    bytes: loaded.bytes,
+    fetchMs: loaded.fetchMs,
+    bodyMs: loaded.bodyMs,
+    parseMs: loaded.parseMs,
+    totalMs: loaded.fetchMs + loaded.bodyMs + loaded.parseMs
+  }
+
+  // 2. normalize ----------------------------------------------------------
+  ui.heading('2. normalize (fold + tokenize)')
+  const nt = ui.table()
+
+  const folded = repeat(() => strings.map(fold))
+  const perString = repeat(() => strings.map(tokenize))
+  const tokenLists = perString.value
+  const tokens = tokenLists.flat()
+  const uniqueTokens = [...new Set(tokens)]
+
+  ui.row(nt, 'fold all strings', folded.runs, 'fold() from @wendig/lib')
+  ui.row(nt, `tokenize all strings → ${fmt(tokens.length)} tokens`, perString.runs, 'split /[\\s\\-]+/')
+  ui.note(`${fmt(uniqueTokens.length)} unique tokens — a ${(tokens.length / uniqueTokens.length).toFixed(1)}× reduction the stemmer can exploit`)
+  await raf()
+
+  out.normalize = {
+    tokens: tokens.length,
+    uniqueTokens: uniqueTokens.length,
+    foldMs: folded.median,
+    tokenizeMs: perString.median
+  }
+
+  // 3. stemming -----------------------------------------------------------
+  ui.heading(`3. stemming (multilingual-stemmer WASM, ${corpus.langName})`)
+  const st = ui.table()
+
+  const warmup = time(() => {
+    for (let i = 0; i < WARMUP_TOKENS; i++) stem(corpus.lang, uniqueTokens[i % uniqueTokens.length])
+  })
+  ui.row(st, `warmup (${fmt(WARMUP_TOKENS)} stems)`, [warmup.ms], 'WASM init + first-call JIT, not steady state')
+
+  const everyToken = repeat(() => {
+    const out = new Array(tokens.length)
+    for (let i = 0; i < tokens.length; i++) out[i] = stem(corpus.lang, tokens[i])
+    return out
+  })
+  ui.row(st, `stem every token (${fmt(tokens.length)})`, everyToken.runs,
+    `${fmt(perSecond(tokens.length, everyToken.median))} tokens/s, no reuse`)
+
+  const uniqueStems = repeat(() => {
+    const memo = new Map()
+    for (const token of uniqueTokens) memo.set(token, stem(corpus.lang, token))
+    return memo
+  })
+  const stems = uniqueStems.value
+  ui.row(st, `stem unique tokens only (${fmt(uniqueTokens.length)})`, uniqueStems.runs,
+    `${fmt(perSecond(uniqueTokens.length, uniqueStems.median))} tokens/s, memoized`)
+
+  const rebuilt = repeat(() => tokenLists.map(list => list.map(token => stems.get(token) || token).join(' ')))
+  const stemmedStrings = rebuilt.value
+  const stemmedUnique = [...new Set(stemmedStrings)]
+  ui.row(st, 'rebuild stemmed strings', rebuilt.runs, `${fmt(stemmedStrings.length)} strings, lookup + join only`)
+
+  const stemTotal = folded.median + perString.median + uniqueStems.median + rebuilt.median
+  ui.totalRow(st, 'total stem pipeline', stemTotal, 'fold + tokenize + unique stems + rebuild')
+
+  const frequency = new Map()
+  for (const token of tokens) frequency.set(token, (frequency.get(token) || 0) + 1)
+  const frequent = [...frequency.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+  ui.samples(frequent.map(([token, count]) => [`${token} (${fmt(count)}×)`, stems.get(token)]))
+  await raf()
+
+  out.stem = {
+    tokens: tokens.length,
+    uniqueTokens: uniqueTokens.length,
+    warmupMs: warmup.ms,
+    everyTokenMs: everyToken.median,
+    everyTokenPerSecond: perSecond(tokens.length, everyToken.median),
+    uniqueTokensMs: uniqueStems.median,
+    uniqueTokensPerSecond: perSecond(uniqueTokens.length, uniqueStems.median),
+    rebuildMs: rebuilt.median,
+    totalMs: stemTotal,
+    samples: frequent.map(([token, count]) => ({token, count, stem: stems.get(token)}))
+  }
+
+  // 4. fuzzy search at Fuse's default options --------------------------------
+  const variants = [
+    {
+      label: 'folded strings',
+      key: 'fuseFolded',
+      list: folded.value,
+      stemQuery: false,
+      note: 'what the app matches against today'
+    },
+    {
+      label: 'stemmed strings',
+      key: 'fuseStemmed',
+      list: stemmedStrings,
+      stemQuery: true,
+      note: 'same record count, stemmed text'
+    },
+    {
+      label: 'stemmed strings, deduplicated',
+      key: 'fuseStemmedUnique',
+      list: stemmedUnique,
+      stemQuery: true,
+      note: `${fmt(stemmedUnique.length)} distinct names instead of ${fmt(stemmedStrings.length)}`
+    }
+  ]
+
+  for (const [index, variant] of variants.entries()) {
+    ui.heading(`4.${index + 1} fuzzy search — ${variant.label}`)
+    ui.note(`${variant.note} · Fuse defaults: threshold ${FUSE_DEFAULTS.threshold}, ignoreLocation ${FUSE_DEFAULTS.ignoreLocation}`)
+    const ft = ui.table()
+
+    const built = repeat(() => new Fuse(variant.list))
+    ui.row(ft, `build Fuse index (${fmt(variant.list.length)} records)`, built.runs, 'flat string list')
+    const fuse = built.value
+    await raf()
+
+    const queries = []
+    for (const query of corpus.queries) {
+      const prepared = variant.stemQuery ? stemText(corpus.lang, query) : fold(query)
+      const run = repeat(() => fuse.search(prepared, {limit: SEARCH_LIMIT}))
+      const top = run.value.slice(0, TOP_RESULTS).map(result => result.item)
+      // how many records match at all, ignoring the limit — the app paginates and
+      // counts, so this is the number it actually needs
+      const total = fuse.search(prepared).length
+      queries.push({query, prepared, ms: run.median, returned: run.value.length, total, top})
+      ui.row(ft, `search ${JSON.stringify(prepared)}`, run.runs,
+        `${fmt(total)} matches · ${fmt(run.value.length)} returned at limit ${SEARCH_LIMIT}`,
+        `top ${TOP_RESULTS}: ${top.map(t => JSON.stringify(t)).join('   ') || '—'}`)
+      await raf()
+    }
+
+    out[variant.key] = {
+      records: variant.list.length,
+      indexMs: built.median,
+      queries
+    }
+  }
+
+  // 5. Fuse option sweep ---------------------------------------------------
+  // Fuse 7 has no setOptions(), so every (ignoreLocation, threshold) pair needs
+  // its own new Fuse() — which also means the index is rebuilt for each cell.
+  const sweepLists = [
+    {label: 'folded strings', list: folded.value, stemQuery: false},
+    {label: 'stemmed strings, deduplicated', list: stemmedUnique, stemQuery: true}
+  ]
+
+  out.sweep = {lists: [], cells: [], ms: 0}
+  const sweepStart = performance.now()
+
+  for (const [listIndex, sweepList] of sweepLists.entries()) {
+    ui.heading(`5.${listIndex + 1} option sweep — ${sweepList.label}`)
+    ui.note(`${fmt(sweepList.list.length)} records · matches counted at limit ${SWEEP_MATCH_LIMIT}, so ${fmt(SWEEP_MATCH_LIMIT)}+ means the threshold is far too loose`)
+    const gt = ui.grid(['ignoreLocation', 'threshold', 'query', 'ms (median)', `matches (≤${SWEEP_MATCH_LIMIT})`])
+
+    const cells = []
+    for (const ignoreLocation of SWEEP_IGNORE_LOCATIONS) {
+      for (const threshold of SWEEP_THRESHOLDS) {
+        statusEl.textContent = `${corpus.key}: sweeping ${sweepList.label} — threshold ${threshold}, ignoreLocation ${ignoreLocation}…`
+        await raf()
+
+        const options = {threshold, ignoreLocation}
+        const built = repeat(() => new Fuse(sweepList.list, options))
+        const fuse = built.value
+
+        for (const query of corpus.sweepQueries) {
+          const prepared = sweepList.stemQuery ? stemText(corpus.lang, query) : fold(query)
+          const run = repeat(() => fuse.search(prepared, {limit: SWEEP_MATCH_LIMIT}))
+          const matches = run.value.length
+          const top = run.value.slice(0, TOP_RESULTS).map(result => result.item)
+
+          const cell = {list: sweepList.label, ignoreLocation, threshold, query: prepared, ms: run.median, matches, indexMs: built.median, top}
+          cells.push(cell)
+          out.sweep.cells.push(cell)
+          gt([
+            String(ignoreLocation),
+            String(threshold),
+            JSON.stringify(prepared),
+            fmt(run.median),
+            matches >= SWEEP_MATCH_LIMIT ? `${fmt(SWEEP_MATCH_LIMIT)}+` : fmt(matches)
+          ], `top ${TOP_RESULTS}: ${top.map(t => JSON.stringify(t)).join('   ') || '—'}`)
+          await raf()
+        }
+      }
+    }
+
+    out.sweep.lists.push({label: sweepList.label, records: sweepList.list.length, cells})
+  }
+
+  out.sweep.ms = performance.now() - sweepStart
+  const indexTimes = out.sweep.cells.map(cell => cell.indexMs)
+  ui.note(`sweep cost ${fmt(out.sweep.ms)} ms for ${fmt(out.sweep.cells.length)} searches — every cell also rebuilt its index (${fmt(Math.min(...indexTimes))}–${fmt(Math.max(...indexTimes))} ms)`)
+
+  // 6. scoring off --------------------------------------------------------
+  // shouldSort: false skips results.sort(sortFn) in Fuse's search(), but
+  // computeScore() still runs either way, so this measures sort cost only — not
+  // scoring. Result count is unaffected; ordering becomes index order, which is
+  // only useful if you re-rank yourself.
+  const SCORING_THRESHOLDS = [0.2, 0.6]
+
+  ui.heading('6. scoring off (shouldSort: false)')
+  ui.note(`same queries, same threshold values as the sweep · note that computeScore() runs in both cases, so this isolates the sort step`)
+  const st6 = ui.grid(['list', 'threshold', 'query', 'shouldSort', 'ms (median)', `matches (≤${SEARCH_LIMIT})`])
+
+  out.scoring = []
+
+  for (const sweepList of sweepLists) {
+    for (const threshold of SCORING_THRESHOLDS) {
+      statusEl.textContent = `${corpus.key}: scoring off — ${sweepList.label}, threshold ${threshold}…`
+      await raf()
+
+      const fusions = {}
+      for (const shouldSort of [true, false]) {
+        const built = repeat(() => new Fuse(sweepList.list, {threshold, shouldSort}))
+        fusions[shouldSort] = {fuse: built.value, indexMs: built.median}
+      }
+
+      for (const query of corpus.queries) {
+        const prepared = sweepList.stemQuery ? stemText(corpus.lang, query) : fold(query)
+        for (const shouldSort of [true, false]) {
+          const run = repeat(() => fusions[shouldSort].fuse.search(prepared, {limit: SEARCH_LIMIT}))
+          const entry = {
+            list: sweepList.label,
+            threshold,
+            query: prepared,
+            shouldSort,
+            ms: run.median,
+            matches: run.value.length,
+            top: run.value.slice(0, TOP_RESULTS).map(result => result.item)
+          }
+          out.scoring.push(entry)
+          st6([
+            sweepList.label,
+            String(threshold),
+            JSON.stringify(prepared),
+            String(shouldSort),
+            fmt(run.median),
+            fmt(entry.matches)
+          ], `top ${TOP_RESULTS}: ${entry.top.map(t => JSON.stringify(t)).join('   ') || '—'}`)
+          await raf()
+        }
+      }
+    }
+  }
+
+  // 7. end to end --------------------------------------------------------
+  ui.heading('7. end to end')
+  const et = ui.table()
+
+  const t0 = performance.now()
+  const fresh = await loadCorpus(corpus.file)
+  const freshLists = fresh.strings.map(tokenize)
+  const freshStems = new Map()
+  for (const token of new Set(freshLists.flat())) freshStems.set(token, stem(corpus.lang, token))
+  const freshStemmed = freshLists.map(list => list.map(token => freshStems.get(token) || token).join(' '))
+  const freshFuse = new Fuse(freshStemmed)
+  const query = stemText(corpus.lang, corpus.queries[0])
+  const returned = freshFuse.search(query, {limit: SEARCH_LIMIT}).length
+  const total = freshFuse.search(query).length
+  const endToEndMs = performance.now() - t0
+  ui.totalRow(et, 'fetch + parse + fold + tokenize + stem + index + 1 search', endToEndMs,
+    `${fmt(total)} matches for ${JSON.stringify(query)}`)
+  await raf()
+
+  out.endToEnd = {ms: endToEndMs, returned, total, query}
+
+  statusEl.textContent = `${corpus.key}: done — end to end ${fmt(endToEndMs)} ms`
+  await raf()
+
+  return out
+}
+
+const setBusy = busy => {
+  for (const button of document.querySelectorAll('button')) button.disabled = busy
+}
+
+const run = async keys => {
+  setBusy(true)
+  resultsEl.textContent = ''
+  report.corpora = {}
+  const startedAt = performance.now()
+
+  for (const corpus of CORPUS.filter(c => keys.includes(c.key))) {
+    try {
+      report.corpora[corpus.key] = await runCorpus(corpus)
+    } catch (error) {
+      const node = el('div', 'panel')
+      node.append(el('h2', null, `${corpus.key} failed`), el('pre', 'err', String((error && error.stack) || error)))
+      resultsEl.append(node)
+      report.corpora[corpus.key] = {corpus: corpus.key, error: String(error && error.message || error)}
+      console.error(error)
+    }
+  }
+
+  const wallClockMs = performance.now() - startedAt
+  report.runMs = wallClockMs
+  setBusy(false)
+  if (!Object.keys(report.corpora).length) statusEl.textContent = 'nothing ran'
+  else statusEl.textContent = `done — ${fmt(wallClockMs / 1000)} s total, all on the main thread`
+  console.log('fs-bench results', report)
+  console.table(summaryRows())
+}
+
+const summaryRows = () => {
+  const rows = []
+  for (const [key, corpus] of Object.entries(report.corpora)) {
+    if (corpus.error) {
+      rows.push({corpus: key, metric: 'failed', ms: '-', note: corpus.error})
+      continue
+    }
+    rows.push(
+      {corpus: key, metric: 'load', ms: corpus.load.totalMs, note: `${fmt(corpus.load.strings)} strings, ${(corpus.load.bytes / 1048576).toFixed(2)} MB`},
+      {corpus: key, metric: 'fold', ms: corpus.normalize.foldMs, note: ''},
+      {corpus: key, metric: 'tokenize', ms: corpus.normalize.tokenizeMs, note: `${fmt(corpus.normalize.tokens)} tokens`},
+      {corpus: key, metric: 'stem every token', ms: corpus.stem.everyTokenMs, note: `${fmt(corpus.stem.everyTokenPerSecond)}/s`},
+      {corpus: key, metric: 'stem unique tokens', ms: corpus.stem.uniqueTokensMs, note: `${fmt(corpus.stem.uniqueTokensPerSecond)}/s, ${fmt(corpus.normalize.uniqueTokens)} unique`},
+      {corpus: key, metric: 'rebuild stemmed strings', ms: corpus.stem.rebuildMs, note: ''},
+      {corpus: key, metric: 'stem pipeline total', ms: corpus.stem.totalMs, note: ''},
+      {corpus: key, metric: 'Fuse index (folded)', ms: corpus.fuseFolded.indexMs, note: `${fmt(corpus.fuseFolded.records)} records`},
+      {corpus: key, metric: 'Fuse index (stemmed)', ms: corpus.fuseStemmed.indexMs, note: `${fmt(corpus.fuseStemmed.records)} records`},
+      {corpus: key, metric: 'Fuse index (stemmed, deduped)', ms: corpus.fuseStemmedUnique.indexMs, note: `${fmt(corpus.fuseStemmedUnique.records)} records`},
+      {corpus: key, metric: 'option sweep', ms: Math.round(corpus.sweep.ms), note: `${fmt(corpus.sweep.cells.length)} searches across ${corpus.sweep.lists.length} lists`},
+      {corpus: key, metric: 'end to end', ms: corpus.endToEnd.ms, note: `${fmt(corpus.endToEnd.returned)} returned, ${fmt(corpus.endToEnd.total)} matches`}
+    )
+    for (const query of corpus.fuseFolded.queries) {
+      rows.push({corpus: key, metric: `search ${JSON.stringify(query.prepared)}`, ms: query.ms, note: `${fmt(query.total)} matches, folded corpus`})
+    }
+    for (const query of corpus.fuseStemmed.queries) {
+      rows.push({corpus: key, metric: `search ${JSON.stringify(query.prepared)}`, ms: query.ms, note: `${fmt(query.total)} matches, stemmed corpus`})
+    }
+    for (const cell of corpus.sweep.cells) {
+      rows.push({
+        corpus: key,
+        metric: `sweep t=${cell.threshold} ignoreLoc=${cell.ignoreLocation} ${JSON.stringify(cell.query)}`,
+        ms: cell.ms,
+        note: `${cell.matches >= SWEEP_MATCH_LIMIT ? `${SWEEP_MATCH_LIMIT}+` : cell.matches} matches, ${cell.list}`
+      })
+    }
+    for (const entry of corpus.scoring) {
+      rows.push({
+        corpus: key,
+        metric: `sort=${entry.shouldSort ? 'on' : 'off'} t=${entry.threshold} ${JSON.stringify(entry.query)}`,
+        ms: entry.ms,
+        note: `${entry.matches} matches, ${entry.list}`
+      })
+    }
+  }
+  return rows
+}
+
+document.getElementById('run-all').onclick = () => run(['de', 'fr'])
+for (const button of document.querySelectorAll('[data-run]')) {
+  button.onclick = () => run([button.dataset.run])
+}
+document.getElementById('reset').onclick = () => {
+  resultsEl.textContent = ''
+  report.corpora = {}
+  statusEl.textContent = ''
+}
+document.getElementById('copy').onclick = async () => {
+  const json = JSON.stringify(report, null, 2)
+  try {
+    // needs a secure context, so it fails when served from a LAN address
+    await navigator.clipboard.writeText(json)
+    statusEl.textContent = 'results JSON copied to clipboard'
+  } catch {
+    console.log('fs-bench results', json)
+    statusEl.textContent = 'clipboard blocked — results JSON logged to the console instead'
+  }
+}
+
+report.env = {
+  stemmer: STEMMER_URL,
+  fuse: FUSE_URL,
+  userAgent: navigator.userAgent,
+  cores: navigator.hardwareConcurrency,
+  deviceMemoryGB: navigator.deviceMemory || 'n/a',
+  iterations: ITERATIONS
+}
+
+for (const [key, value] of Object.entries(report.env)) {
+  document.getElementById('env').append(el('b', null, key), el('span', null, String(value)))
+}
+
+statusEl.textContent = 'press Run all'
+</script>
+</body>
+</html>
