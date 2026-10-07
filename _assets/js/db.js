@@ -91,7 +91,7 @@ const setup = async () => {
 
     // sort
     service['sort'] = {}
-    service['sort']['name'] = fold(service['name'])
+    service['sort']['name'] = util.fold(service['name'])
     let fts_data = [service['name']]
     // fts_data.push(service['comment'] || '')
     // fts_data = fts_data.concat(service['d_breadcrumb'])
@@ -108,10 +108,10 @@ const setup = async () => {
       fts_data.push(service['place']['former_zip'])
       fts_data.push(service['place']['former_country'])
 
-      service['sort']['city'] = fold(service['place']['current_city'])
-      service['sort']['address'] = fold(service['place']['current_address'])
+      service['sort']['city'] = util.fold(service['place']['current_city'])
+      service['sort']['address'] = util.fold(service['place']['current_address'])
     }
-    service['fts'] = fold(fts_data.join(' '))
+    service['fts'] = util.fold(fts_data.join(' '))
     service['sort']['fts'] = service['fts']
     service['sort']['date'] = service['date']
 
@@ -299,25 +299,6 @@ const reverse = (results, criteria) => {
   const d = criteria['direction'] || 'asc'
 
   return (d === 'desc' ? results.reverse() : results)
-}
-
-const fold = (str) => {
-  if (str == undefined) {return str}
-
-  return str.toString().trim().toLowerCase().
-    replaceAll(/[äáàâå]/g, 'a').
-    replaceAll(/[öóòôðø]/g, 'o').
-    replaceAll(/[iíìî]/g, 'i').
-    replaceAll(/[ëéèê]/g, 'e').
-    replaceAll(/[üúùû]/g, 'u').
-    replaceAll(/[ÿ]/g, 'y').
-    replaceAll(/[ćč]/g, 'c').
-    replaceAll(/[ł]/g, 'l').
-    replaceAll(/[śš]/g, 's').
-    replaceAll(/[ż]/g, 'z').
-    replaceAll(/æ/g, 'ae').
-    replaceAll(/ß/g, 'ss').
-    replaceAll(/ł/g, 'l')
 }
 
 const sanitizeCriteria = (input) => {
