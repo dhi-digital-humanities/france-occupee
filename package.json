@@ -10,6 +10,7 @@
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^0.4.1",
     "@wendig/lib": "git+https://git.wendig.io/git/js-lib.git",
+    "bootstrap-icons": "^1.13.2",
     "concurrently": "^9.1.0",
     "csv-stringify": "^6.6.0",
     "dotenv": "^17.2.3",
