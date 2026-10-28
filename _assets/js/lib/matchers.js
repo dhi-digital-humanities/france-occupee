@@ -1,7 +1,6 @@
 import {util} from '@wendig/lib'
-import {log} from './util'
 
-let thesaurus = {}
+let groups = []
 
 const cache = new Map()
 const fetch = (key, retrieve) => {
@@ -10,31 +9,16 @@ const fetch = (key, retrieve) => {
   return cache.get(key)
 }
 
-const applyThesaurusData = (data) => {
-  for (const terms of data) {
-    const tokenized = tokenize(terms.map(t => tokenize(t))).flat()
+const termsCache = new Map()
+const patternCache = new Map()
 
-    for (const t1 of tokenized) {
-      for (const t2 of tokenized) {
-        thesaurus[t1] = thesaurus[t1] || []
-        thesaurus[t1].push(t2)
-      }
-    }
-  }
+const applyThesaurusData = (data) => {
+  groups = data.map(terms => terms.map(t => tokenize(t)).filter(t => t.length > 0))
+  termsCache.clear()
 }
 
 function rEscape(string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
-}
-
-const expand = (terms) => {
-  const result = []
-
-  for (const t of terms) {
-    result.push(...(thesaurus[t] || [t]))
-  }
-
-  return result
 }
 
 const tokenize = (string) => {
@@ -44,47 +28,89 @@ const tokenize = (string) => {
   return fetch(string, () => {
     return(
       util.fold(string).
+      replace(/[’‘]/g, "'").
       split(/[\s\-]+/)
     )
   })
 }
 
-const matchesAnyTerms = (target, actual) => {
-  const targetTokenized = tokenize(target)
-  if (targetTokenized.length === 0) return true
+const patterns = (token) => {
+  if (!patternCache.has(token)) {
+    const rEsc = rEscape(token)
 
-  const actualExpanded = expand(tokenize(actual))
-  if (actualExpanded.length === 0) return false
+    patternCache.set(token, [
+      new RegExp("(^|\\s|\\(|\\-)" + rEsc),
+      new RegExp(rEsc + "($|\\s|\\)|\\-)")
+    ])
+  }
 
-  const targetPatterns = targetTokenized.map(t => {
-    const rEsc = rEscape(t)
-    const start = new RegExp("(^|\\s|\\(|\\-)" + rEsc)
-    const end = new RegExp(rEsc + "($|\\s|\\)|\\-)")
+  return patternCache.get(token)
+}
 
-    return [start, end]
-  })
+const groupTerms = (tokens) => {
+  const key = tokens.join(' ')
+  if (termsCache.has(key)) return termsCache.get(key)
 
-  log(targetTokenized)
-  log(actual)
-  log(actualExpanded)
-  log(targetPatterns)
+  const result = []
+  let i = 0
 
-  for (const a of actualExpanded) {
-    if (!a) continue
+  while (i < tokens.length) {
+    let found = null
 
-    for (const [s, e] of targetPatterns) {
-      if (a.match(s) || a.match(e)) return true
+    for (const group of groups) {
+      for (const alternative of group) {
+        if (alternative.length > tokens.length - i) continue
+        if (found && alternative.length <= found.alternative.length) continue
+        if (!alternative.every((t, j) => t === tokens[i + j])) continue
+
+        found = {group, alternative}
+      }
+    }
+
+    if (found) {
+      result.push(found.group)
+      i += found.alternative.length
+    } else {
+      result.push([[tokens[i]]])
+      i += 1
     }
   }
 
-  return false
+  termsCache.set(key, result)
+  return result
+}
+
+const alternativeMatches = (alternative, actualTokens) => {
+  return alternative.every(t => {
+    const [start, end] = patterns(t)
+
+    return actualTokens.some(a => start.test(a) || end.test(a))
+  })
+}
+
+const termMatches = (term, actualTokens) => {
+  return term.some(alternative => alternativeMatches(alternative, actualTokens))
+}
+
+const matchesAnyTerms = (target, actual) => {
+  const queryTerms = groupTerms(tokenize(target))
+  if (queryTerms.length === 0) return true
+  if (!actual) return false
+
+  const actualTokens = tokenize(actual)
+  if (actualTokens.length === 0) return false
+
+  return queryTerms.some(term => termMatches(term, actualTokens))
 }
 
 const matchesAllTerms = (target, actual) => {
   if (!target || target.length === 0) return true
   if (!actual) return false
 
-  return target.every(t => matchesAnyTerms(t, actual))
+  const actualTokens = tokenize(actual)
+  if (actualTokens.length === 0) return false
+
+  return groupTerms(tokenize(target)).every(term => termMatches(term, actualTokens))
 }
 
 const matchesIds = (target, actual) => {
@@ -109,7 +135,7 @@ const matchesExactly = (target, actual) => {
 
 const matchesYears = (years, record) => {
   if (!years) return true
-  const actual = dig(record, ['source', 'd_edition_year'])
+  const actual = record['source'] && record['source']['d_edition_year']
   if (!actual) return false
 
   return years.indexOf(actual) != -1
@@ -176,6 +202,5 @@ export {
   matchesYears,
   hasGeo,
   tokenize,
-  expand,
   applyThesaurusData
 }

@@ -19,7 +19,7 @@ function fo-import {
 }
 
 function fo-deploy {
-    export ROOT_URL="https://static.dhi-paris.fr/fo"
+    export ROOT_URL="https://adresses-france-occupee.fr"
     export APP_ENV=production
     export PMTILES_URL="https://static.dhi-paris.fr/The6dei1/20251217.pmtiles"
     export MATOMO_URL="https://visits.maxweberstiftung.de"
@@ -29,7 +29,7 @@ function fo-deploy {
 
     rsync -av \
     ./_site/ \
-    app@static.dhi-paris.fr:/var/storage/host/static/current/fo/
+    app@static.dhi-paris.fr:/var/storage/host/fo/current/
 
     # rsync -av \
     # ./assets/loader.js \
