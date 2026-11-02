@@ -322,16 +322,6 @@ const sanitizeCriteria = (input) => {
       null
     )
   }
-  if (criteria['hierarchy']) {
-    const values = Object.values(criteria['hierarchy'])
-
-    const allFalse = values.every(v => !v)
-    if (allFalse) delete criteria['hierarchy']
-
-    const allTrue = values.every(v => v)
-    if (allTrue) delete criteria['hierarchy']
-  }
-
   const toFold = ['name', 'city', 'address', 'organization', 'terms']
   for (const f of toFold) {
     if (f in criteria) criteria[f] = ms.tokenize(criteria[f])

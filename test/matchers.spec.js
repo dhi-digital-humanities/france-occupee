@@ -62,6 +62,18 @@ test('thesaurus terms span compounds and word order', () => {
   assert(!ms.matchesAllTerms(ms.tokenize('kommando stab'), 'Verbindungsstab der Luftwaffe'))
 })
 
+test('hierarchy matching with partial maps', () => {
+  const services = {
+    2: {id: 2, parent_id: undefined}
+  }
+  const record = {id: 1, parent_id: 2, source: {country: 'de'}}
+
+  assert(ms.matchesHierarchy({de: true}, record, services))
+  assert(!ms.matchesHierarchy({fr: true}, record, services))
+  assert(!ms.matchesHierarchy({'2': false}, record, services))
+  assert(ms.matchesHierarchy({'1': true}, record, services))
+})
+
 test('year matching', () => {
   const record = {source: {d_edition_year: 1943}}
 

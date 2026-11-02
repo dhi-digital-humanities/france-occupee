@@ -22,6 +22,7 @@
 
   <script>
     import {UrlSearch, Url} from '@wendig/lib'
+    import {decode} from '../lib/hierarchy'
     import search from '../lib/search.instance'
     import watchlist from '../lib/watchlist'
 
@@ -34,7 +35,7 @@
           let p = url.hashParams()
           p['page'] = parseInt(p['page'] || 1)
           p['perPage'] = parseInt(p['perPage'] || 10)
-          p['hierarchy'] = this.state['hierarchy']
+          p['hierarchy'] = decode(p['hierarchy'])
 
           return p
         }
@@ -49,14 +50,13 @@
         this.urlSearch.setup()
 
         this.bus.on('tree-view:value-changed', (event) => {
-          const hierarchy = event.data.value
-          this.state['hierarchy'] = hierarchy
+          const {value, checked} = event.data
+
+          this.state['criteria']['hierarchy'] = value
 
           const url = Url.current()
-          url.updateHashParams({page: null})
-          url.apply(false)
-
-          this.onUrlChanged()
+          url.updateHashParams({hierarchy: checked || null, page: null})
+          url.apply()
         })
 
         this.bus.on('favs:changed', event => {

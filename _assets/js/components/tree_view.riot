@@ -73,6 +73,7 @@
 
   <script>
     import {util} from '@wendig/lib'
+    import {encode} from '../lib/hierarchy'
     import search from '../lib/search.instance'
 
     const merge = (array) => {
@@ -86,7 +87,7 @@
 
     export default class {
       onBeforeMount(props, state) {
-        state['checked'] = props['defaultChecked'] || false
+        state['checked'] = this.checkedFromCriteria(props, props['defaultChecked'])
 
         if (this.isRoot()) {
           this.bus.on('tree-view:any-changed', event => this.onValueChanged())
@@ -166,14 +167,49 @@
       }
 
       onBeforeUpdate(props, state) {
+        state['checked'] = this.checkedFromCriteria(props, props['defaultChecked'])
+
         if (!this.input()) return
 
         this.input().checked = state['checked']
       }
 
+      ownKeys(props = this.props) {
+        const parentId = props['parentId'] || -1
+
+        if (parentId === -1) return props['country'] ? [props['country']] : []
+
+        return (Array.isArray(parentId) ? parentId : [parentId]).map(id => `${id}`)
+      }
+
+      checkedFromCriteria(props, fallback) {
+        const criteria = props['criteria'] || {}
+        const hierarchy = criteria['hierarchy'] || {}
+
+        for (const key of this.ownKeys(props)) {
+          if (key in hierarchy) return !!hierarchy[key]
+        }
+
+        return !!fallback
+      }
+
+      toNode() {
+        return {
+          keys: this.ownKeys(),
+          checked: this.state['checked'],
+          children: this.children().map(child => child.toNode())
+        }
+      }
+
+      checkedParam() {
+        return encode(this.children().map(child => child.toNode()))
+      }
+
       onValueChanged() {
         const value = this.value()
-        this.bus.emit('tree-view:value-changed', {value})
+        const checked = this.checkedParam()
+
+        this.bus.emit('tree-view:value-changed', {value, checked})
       }
 
       fetch() {
