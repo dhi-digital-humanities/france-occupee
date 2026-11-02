@@ -74,6 +74,7 @@
         }
         p['perPage'] = 15
         p['status'] = 'visible'
+        p['excludeDeleted'] = true
         // console.log(p)
 
         promises.push(search.services(p))

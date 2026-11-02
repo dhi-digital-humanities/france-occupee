@@ -55,7 +55,7 @@ export default class Search extends WendigSearch {
   }
 
   csv(ids) {
-    const criteria = {fav: 'true', csv: 'true', id: ids}
+    const criteria = {fav: 'true', csv: 'true', id: ids, excludeDeleted: true}
 
     return this.postMessage({action: 'services', criteria})
   }

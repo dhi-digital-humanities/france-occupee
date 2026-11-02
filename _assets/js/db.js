@@ -194,6 +194,8 @@ const findServices = (criteria, basis=null) => {
     const placeStatus = dig(record, ['place', 'status'])
     if (!ms.matchesExactly(criteria['placeStatus'], placeStatus)) return false
 
+    if (ms.excludedByDeletion(criteria['excludeDeleted'], record)) return false
+
     if (!criteria['fav']) {
       if (!ms.matchesAllTerms(criteria['terms'], record['fts'])) return false
       if (!ms.matchesYears(criteria['years'], record)) return false

@@ -74,6 +74,18 @@ test('hierarchy matching with partial maps', () => {
   assert(ms.matchesHierarchy({'1': true}, record, services))
 })
 
+test('exact matching and deleted records', () => {
+  assert(ms.matchesExactly(['visible', 'deleted'], 'deleted'))
+  assert(!ms.matchesExactly(['visible', 'deleted'], 'pending'))
+  assert(ms.matchesExactly(null, 'pending'))
+
+  assert(ms.excludedByDeletion(true, {status: 'deleted', place: {status: 'visible'}}))
+  assert(ms.excludedByDeletion(true, {status: 'visible', place: {status: 'deleted'}}))
+  assert(!ms.excludedByDeletion(true, {status: 'visible', place: {status: 'visible'}}))
+  assert(!ms.excludedByDeletion(true, {status: 'visible'}))
+  assert(!ms.excludedByDeletion(false, {status: 'deleted'}))
+})
+
 test('year matching', () => {
   const record = {source: {d_edition_year: 1943}}
 

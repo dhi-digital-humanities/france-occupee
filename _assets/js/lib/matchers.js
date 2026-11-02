@@ -129,8 +129,16 @@ const matchesParentId = (target, actual) => {
 
 const matchesExactly = (target, actual) => {
   if (!target) return true
+  if (Array.isArray(target)) return target.indexOf(actual) != -1
 
   return target === actual
+}
+
+const excludedByDeletion = (excludeDeleted, record) => {
+  if (!excludeDeleted) return false
+  if (record['status'] === 'deleted') return true
+
+  return !!(record['place'] && record['place']['status'] === 'deleted')
 }
 
 const matchesYears = (years, record) => {
@@ -200,6 +208,7 @@ export {
   matchesParentId,
   matchesAddress,
   matchesYears,
+  excludedByDeletion,
   hasGeo,
   tokenize,
   applyThesaurusData

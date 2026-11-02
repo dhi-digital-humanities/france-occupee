@@ -219,7 +219,7 @@
           parentId: this.parentId(),
           country: this.props['country'],
           perPage: 'max',
-          status: 'visible'
+          status: ['visible', 'deleted']
         }
 
         search.services(params).then(data => {
