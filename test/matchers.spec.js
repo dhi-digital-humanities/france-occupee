@@ -31,8 +31,16 @@ test('term matching (any)', () => {
   assert(ms.matchesAnyTerms('japanisch', 'Japanisch-Kaiserliche Marine'))
   assert(ms.matchesAnyTerms('liche', 'Japanisch-Kaiserliche Marine'))
 
-  assert(!ms.matchesAnyTerms('rma', 'Saint Germain'))
-  assert(!ms.matchesAnyTerms('pan', 'Japanisch-Kaiserliche Marine'))
+  assert(ms.matchesAnyTerms('rma', 'Saint Germain'))
+  assert(ms.matchesAnyTerms('pan', 'Japanisch-Kaiserliche Marine'))
+  assert(!ms.matchesAnyTerms('xyz', 'Saint Germain'))
+})
+
+test('terms match anywhere inside a token', () => {
+  assert(ms.matchesAllTerms('zoll', 'Bezirkszollkommissariat'))
+  assert(ms.matchesAllTerms('zoll', 'Zollgrenzschutz'))
+  assert(ms.matchesAllTerms('zoll', 'Hauptzollamt'))
+  assert(!ms.matchesAllTerms('zoll', 'Bezirkskommissariat'))
 })
 
 test('thesaurus alternatives are matched as whole terms', () => {

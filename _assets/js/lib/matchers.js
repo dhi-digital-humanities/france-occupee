@@ -40,7 +40,8 @@ const patterns = (token) => {
 
     patternCache.set(token, [
       new RegExp("(^|\\s|\\(|\\-)" + rEsc),
-      new RegExp(rEsc + "($|\\s|\\)|\\-)")
+      new RegExp(rEsc + "($|\\s|\\)|\\-)"),
+      new RegExp(rEsc)
     ])
   }
 
@@ -82,9 +83,9 @@ const groupTerms = (tokens) => {
 
 const alternativeMatches = (alternative, actualTokens) => {
   return alternative.every(t => {
-    const [start, end] = patterns(t)
+    const ps = patterns(t)
 
-    return actualTokens.some(a => start.test(a) || end.test(a))
+    return actualTokens.some(a => ps.some(p => p.test(a)))
   })
 }
 
