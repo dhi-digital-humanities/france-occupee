@@ -13,10 +13,10 @@ The build process requires a working [NodeJS](https://nodejs.org) environment. T
     git clone https://github.com/dhi-digital-humanities/france-occupee.git
     cd france-occupee
     npm install
-    DATA_SHARE="..." npm run import
+    npm run import-data
     npm run dev
 
-in the project directory and then navigate to http://localhost:3000 with your browser.
+in the project directory and then navigate to http://localhost:3000 with your browser. `npm run import-data` downloads the data archive from static.dhi-paris.fr (about 100 MB) and extracts it into the `data` directory.
 
 ## Deployment
 
@@ -25,3 +25,11 @@ Deployment requires a web server (e.g. Apache, Nginx or such) with [HTTP range r
     npm run build
 
 and upload the content within the `_site` directory to your web server's document root.
+
+## Data snapshots
+
+`npm run import-data` downloads `data-latest.tar.gz` from `https://static.dhi-paris.fr/data/dhip-fo/`. To publish the current `data` directory as a snapshot, run
+
+    npm run deploy-data
+
+This uploads `data-YYYYMMDDHHMMSS.tar.gz` and points `data-latest.tar.gz` at it; set `DATA_VERSION` to override the timestamp.

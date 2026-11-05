@@ -37,7 +37,8 @@
     "build-css": "sass -c --style=compressed --no-source-map -I ./node_modules _assets/styles/app.scss assets/app.css",
     "test": "node --enable-source-maps --test --watch tmp/test.mjs",
     "deploy": "bin/fo.sh deploy",
-    "import": "bin/fo.sh import",
+    "deploy-data": "bin/fo.sh deploy-data",
+    "import-data": "bin/fo.sh import-data",
     "benchmark": "npx --offline -- http-server ./test/benchmark -c-1 -p 3001"
   }
 }
