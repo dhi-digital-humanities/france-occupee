@@ -2,7 +2,7 @@
 
 This repository contains the source code for the project's [database application](https://www.adresses-france-occupee.fr).
 
-The application is static and as such based on [eleventy](https://www.11ty.dev/) and makes use of [RiotJS](https://riot.js.org/) and [SASS](https://sass-lang.com) and the [web worker API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+The application is a static SPA based on [eleventy](https://www.11ty.dev/). It uses [RiotJS](https://riot.js.org/), [SASS](https://sass-lang.com) and the [web worker API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
 
 The data is included within the `/data` directory and the map component additionally uses [PROTOMAPS](https://protomaps.com).
 
@@ -25,4 +25,3 @@ Deployment requires a web server (e.g. Apache, Nginx or such) with [HTTP range r
     npm run build
 
 and upload the content within the `_site` directory to your web server's document root.
-
