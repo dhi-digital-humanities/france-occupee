@@ -11,8 +11,8 @@ function fo-import-data {
 
     curl -fsSL "https://static.dhi-paris.fr/data/dhip-fo/data-latest.tar.gz" -o "$IMPORT_ARCHIVE"
 
-    rm -rf data
     mkdir -p data
+    find data -mindepth 1 -maxdepth 1 ! -name placeimages -exec rm -rf {} +
     tar --no-same-owner -xzf "$IMPORT_ARCHIVE" -C data
 }
 
@@ -24,7 +24,7 @@ function fo-deploy-data {
 
     tar -czf "$PACKAGE_ARCHIVE" -C data \
         --owner=0 --group=0 \
-        places.json services.json sources.json thesaurus.json placeimages
+        --exclude=placeimages .
     chmod 644 "$PACKAGE_ARCHIVE"
 
     DIRNAME="/var/storage/host/static/current/data/dhip-fo"
