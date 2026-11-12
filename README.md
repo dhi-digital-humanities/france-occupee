@@ -69,3 +69,13 @@ This sets the production URL, Matomo and PMTiles settings, builds the production
 ## Legacy
 
 The project began as a FileMaker database, was later published as a PHP web application, and is now this static Eleventy/Riot SPA, which performs all filtering and searching in a Web Worker. The JSON field names and some of the data quirks above still reflect that FileMaker/PHP lineage.
+
+## License
+
+The source code in this repository is licensed under the [GNU Affero General Public License, version 3](LICENSE) (AGPL-3.0). See [`COPYING`](COPYING) for the copyright notice.
+
+The research data is a separate work. The archival dataset is published on Zenodo under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/):
+
+> Martens, Stefan; von List, Corinna (2024). *France under German occupation. The German and French administration 1940-1945 – full data* [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.11203510>
+
+The app-ready JSON snapshot imported into `data/` is derived from that dataset. If you reuse it, please attribute the dataset as above. The photographs in `data/placeimages/` are not part of this repository and are not covered by the AGPL; their rights remain with their respective holders (see the `image_copyright_*` fields in `places.json`). The DHI Paris name and logos are trademarks of the Deutsches Historisches Institut Paris and are not licensed under the AGPL. Third-party libraries and assets remain under their own licenses; see `package-lock.json` and the respective files for details.
