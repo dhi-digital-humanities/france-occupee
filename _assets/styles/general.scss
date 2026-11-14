@@ -3,9 +3,8 @@
 
 // general
 
-@font-face {
-  font-family: ayumi;
-  src: url('');
+body {
+  color: fo.$dark-gray;
 }
 
 
@@ -17,8 +16,10 @@
     justify-content: space-between;
     margin-bottom: 20px;
 
-    font-family: ayumi;
-    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
 
     .logo {
       width: 350px;
@@ -39,7 +40,7 @@
           font-size: 0.7em;
         }
         font-size: 24px;
-        font-weight: bold;
+        font-weight: 300;
       }
     }
 
@@ -54,6 +55,7 @@
       a {
         color: fo.$dark-gray;;
         text-decoration: underline;
+        text-underline-offset: 2px;
       }
 
       a[disabled] {
@@ -65,17 +67,21 @@
 }
 
 [app-id='fo'] {
-  font-family: ayumi;
-  font-size: 14px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
 
   form {
-    font-family: ayumi;
+    font-family: 'Oswald', sans-serif;
   }
 
   .btn-group {
     .btn {
       border: 1px solid;
-      padding: 3px;
+      padding: 3px 0;
+      font-size: 11px;
+      letter-spacing: 0;
 
       &.btn-primary {
         color: fo.$dark-gray;
@@ -92,10 +98,10 @@
   }
 
   .btn {
-    font-weight: normal;
+    font-weight: 300;
     border-radius: 0;
-    font-size: 14px;
-    font-family: ayumi;
+    font-size: 12px;
+    font-family: 'Oswald', sans-serif;
 
     img {
       margin-top: -3px;
@@ -159,9 +165,9 @@
   }
 
   .form-label {
-    font-weight: normal;
-    font-size: 14px;
-    font-family: ayumi;
+    font-weight: 300;
+    font-size: 12px;
+    font-family: 'Oswald', sans-serif;
   }
 
   a {
@@ -243,6 +249,10 @@
   }
 
   table {
+    th {
+      font-weight: 300;
+    }
+
     th.text-column {
       width: 300px;
     }
@@ -254,7 +264,7 @@
 
   [is='pagination'] {
     margin: 2em auto;
-    font-family: ayumi;
+    font-family: 'Oswald', sans-serif;
     // position: fixed;
     // bottom: 0;
     // right: 0;
@@ -345,9 +355,8 @@
   }
 
   [is='loading-indicator'] {
-    position: absolute;
-    top: 10px;
-    right: 15px;
+    align-self: center;
+    margin-right: 15px;
 
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
@@ -380,7 +389,7 @@
 [is='order-control'] {
   a {
     white-space: nowrap;
-    font-weight: bold;
+    font-weight: 300;
   }
 
   .indicator {

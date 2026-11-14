@@ -1,13 +1,21 @@
 import config from '../../../_data/config'
 
+const faces = [
+  {weight: '300', url: '/assets/fonts/oswald_light-webfont.ttf'},
+  {weight: '400', url: '/assets/fonts/oswald_regular-webfont.ttf'},
+  {weight: '600', url: '/assets/fonts/oswald_semibold-webfont.ttf'}
+]
+
 export default class FontLoader {
   static async setup() {
-    const font = new FontFace(
-      "ayumi",
-      `url(${config().root_url}/assets/fonts/ayumi_normal-webfont.ttf)`
-    )
+    const fonts = faces.map(({weight, url}) => new FontFace(
+      'Oswald',
+      `url(${config().root_url}${url})`,
+      {weight}
+    ))
 
-    await font.load()
-    document.fonts.add(font)
+    await Promise.all(fonts.map(font => font.load()))
+
+    fonts.forEach(font => document.fonts.add(font))
   }
 }

@@ -44,7 +44,7 @@ function fo-deploy {
 
     npm run build
 
-    rsync -av \
+    rsync -av --delete \
     ./_site/ \
     app@static.dhi-paris.fr:/var/storage/host/fo/current/
 }

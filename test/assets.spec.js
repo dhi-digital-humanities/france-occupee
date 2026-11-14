@@ -19,6 +19,19 @@ test('component image references resolve', () => {
   assert.deepEqual(missing, [])
 })
 
+// FontLoader registers the UI face at runtime; a renamed or missing file
+// silently falls back to the generic sans.
+test('font loader references resolve', () => {
+  const source = readFileSync('_assets/js/lib/font_loader.js', 'utf8')
+  const missing = []
+
+  for (const [, file] of source.matchAll(/\/assets\/fonts\/([A-Za-z0-9_./-]+)/g)) {
+    if (!existsSync(join('assets/fonts', file))) missing.push(`assets/fonts/${file}`)
+  }
+
+  assert.deepEqual(missing, [])
+})
+
 // Eleventy copies some assets straight out of node_modules (e.g. the
 // bootstrap-icons sprite behind the order-control chevrons). If the package is
 // not installed the build silently skips it and the icon vanishes.
